@@ -367,8 +367,8 @@ post_makeinstall_target() {
   fi
 
   # nvidia: Enable USLEEP to reduce CPU load while rendering
-  if listcontains "${GRAPHIC_DRIVERS}" "nvidia" || listcontains "${GRAPHIC_DRIVERS}" "nvidia-legacy"; then
-    echo "__GL_YIELD=USLEEP" >>${INSTALL}/usr/lib/kodi/kodi.conf
+  if listcontains "${GRAPHIC_DRIVERS}" "nvidia"; then
+    echo "__GL_YIELD=USLEEP" >> ${INSTALL}/usr/lib/kodi/kodi.conf
   fi
 
   mkdir -p ${INSTALL}/usr/sbin
