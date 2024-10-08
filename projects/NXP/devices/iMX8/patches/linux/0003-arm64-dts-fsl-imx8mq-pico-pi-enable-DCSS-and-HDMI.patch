@@ -12,7 +12,7 @@ diff --git a/arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dts b/arch/arm64/boot/
 index 89cbec5c41b2..5e2b1a84a85e 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-pico-pi.dts
-@@ -54,6 +54,37 @@ ethphy0: ethernet-phy@1 {
+@@ -54,6 +54,38 @@ ethphy0: ethernet-phy@1 {
  			reg = <1>;
  		};
  	};
@@ -42,6 +42,7 @@ index 89cbec5c41b2..5e2b1a84a85e 100644
 +};
 +
 +&mhdp {
++	data-lanes = <1 2 3 4>;
 +	status = "okay";
 +};
 +
