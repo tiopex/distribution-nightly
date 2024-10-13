@@ -1,4 +1,4 @@
-From dcbe7ff6cbac1d657292105e1204a54337876562 Mon Sep 17 00:00:00 2001
+From b16565d736b4744e97d2ff7e301e50e76c9a27ac Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Sat, 1 Jun 2024 15:46:42 +0000
 Subject: [PATCH 12/35] FROMGIT(6.12): dt-bindings: media: amlogic,gx-vdec: add

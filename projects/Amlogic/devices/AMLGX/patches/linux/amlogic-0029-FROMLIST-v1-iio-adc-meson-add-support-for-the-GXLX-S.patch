@@ -1,4 +1,4 @@
-From b9c9f83faceff5cf074c233e7ba74089e3cf3477 Mon Sep 17 00:00:00 2001
+From ca073dee6ab59ec0229f9ed32b123caaddea988a Mon Sep 17 00:00:00 2001
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Date: Sat, 23 Mar 2024 20:44:41 +0100
 Subject: [PATCH 29/35] FROMLIST(v1): iio: adc: meson: add support for the GXLX

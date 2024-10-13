@@ -1,4 +1,4 @@
-From afeaf33b612fa359c1f2080cf179fddb5d099fc4 Mon Sep 17 00:00:00 2001
+From c8d6e29f58b2ee6e9718fc0b903b86a5fa3821b9 Mon Sep 17 00:00:00 2001
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Date: Sat, 23 Mar 2024 20:04:49 +0100
 Subject: [PATCH 24/35] FROMLIST(v1): iio: adc: meson: fix voltage reference

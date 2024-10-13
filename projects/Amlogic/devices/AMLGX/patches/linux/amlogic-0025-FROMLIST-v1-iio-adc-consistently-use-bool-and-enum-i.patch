@@ -1,4 +1,4 @@
-From 6ced1ee3d8cddbc5fd33e90c07741c404fb1acdd Mon Sep 17 00:00:00 2001
+From b48aff8d86bbdcbf1b55b16c2a279c4adb48d9e3 Mon Sep 17 00:00:00 2001
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Date: Sat, 23 Mar 2024 20:30:02 +0100
 Subject: [PATCH 25/35] FROMLIST(v1): iio: adc: consistently use bool and enum

@@ -1,4 +1,4 @@
-From 45e7be20199750cf5a5058bd8ad01ad7e4d71531 Mon Sep 17 00:00:00 2001
+From ab5e8fc419ff534374415ded95b1596c235363fd Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Sun, 7 Jul 2024 03:16:12 +0000
 Subject: [PATCH 35/35] Revert "drm/meson: vclk: fix calculation of 59.94

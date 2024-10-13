@@ -1,4 +1,4 @@
-From 4c5157d6e917df3acf5c44955bab894db101d32a Mon Sep 17 00:00:00 2001
+From 990e1d9a131a713fb00939151675cd7e857eb537 Mon Sep 17 00:00:00 2001
 From: Zelong Dong <zelong.dong@amlogic.com>
 Date: Wed, 3 Jul 2024 17:38:58 +0800
 Subject: [PATCH 31/35] FROMLIST(v1): media: rc: meson-ir: support PM

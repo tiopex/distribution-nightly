@@ -1,4 +1,4 @@
-From 88b219a016ccbe6534ef7e26009e928447c98689 Mon Sep 17 00:00:00 2001
+From 4bf42b6cc2a476fb3e24417feff3560badfc28f5 Mon Sep 17 00:00:00 2001
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Date: Sat, 23 Mar 2024 20:38:59 +0100
 Subject: [PATCH 28/35] FROMLIST(v1): dt-bindings: iio: adc:
