@@ -3,9 +3,9 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="pvr.dvbviewer"
-PKG_VERSION="22.1.0-Piers"
-PKG_SHA256="2dd0ff7ad301581b8f55be9bb43cb3493fdc2722f2aae0745427fb00943341f3"
-PKG_REV="2"
+PKG_VERSION="22.2.0-Piers"
+PKG_SHA256="b5ebbd6ecfd8da04b310cb5f6e44850d4a3de4cbd62c9924e1b3510daa99da2e"
+PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/kodi-pvr/pvr.dvbviewer"
