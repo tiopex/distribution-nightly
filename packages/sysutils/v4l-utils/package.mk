@@ -13,9 +13,7 @@ PKG_URL="https://linuxtv.org/downloads/v4l-utils/${PKG_NAME}-${PKG_VERSION}.tar.
 PKG_DEPENDS_TARGET="toolchain alsa-lib elfutils ir-bpf-decoders libbpf systemd zlib"
 PKG_LONGDESC="Linux V4L2 and DVB API utilities and v4l libraries (libv4l)."
 
-PKG_MESON_OPTS_TARGET="-Ddefault_library=static \
-                       -Dprefer_static=true \
-                       -Dbpf=enabled \
+PKG_MESON_OPTS_TARGET="-Dbpf=enabled \
                        -Dgconv=disabled \
                        -Djpeg=disabled \
                        -Dqvidcap=disabled \
@@ -45,7 +43,6 @@ post_makeinstall_target() {
 
   rm -rf ${INSTALL}/usr/include
   rm -rf ${INSTALL}/usr/lib/gconv
-  rm -rf ${INSTALL}/usr/lib/lib*
   rm -rf ${INSTALL}/usr/lib/pkgconfig
 
   rm -rf ${INSTALL}/etc/rc_keymaps
