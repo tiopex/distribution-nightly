@@ -1,4 +1,4 @@
-From ac7976449f94f467b90be088c475c565185df593 Mon Sep 17 00:00:00 2001
+From 0d10690c3adead40e44d87ccc494f27715a21505 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>
 Date: Sun, 20 Feb 2022 08:23:12 +0000
 Subject: [PATCH 14/35] FROMLIST(v5): dt-bindings: vendor-prefixes: Add Titan

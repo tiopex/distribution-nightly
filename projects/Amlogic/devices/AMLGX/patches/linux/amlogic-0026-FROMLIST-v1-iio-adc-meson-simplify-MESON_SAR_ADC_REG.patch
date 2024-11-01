@@ -1,4 +1,4 @@
-From 81fd17f0b7b188e9c42c0ace5aef314fb049501a Mon Sep 17 00:00:00 2001
+From fb2ceb994dbdd3aaaa02bd4b1727b8d573ecf3bd Mon Sep 17 00:00:00 2001
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Date: Sat, 23 Mar 2024 20:35:58 +0100
 Subject: [PATCH 26/35] FROMLIST(v1): iio: adc: meson: simplify

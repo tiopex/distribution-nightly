@@ -10,6 +10,10 @@ evdev:input:b0005v045Ep0041*
  KEYBOARD_KEY_7006f=x
  KEYBOARD_KEY_7006e=i
 
+# bt250 remote
+evdev:input:b0005v1D5ApC080e0000*
+ KEYBOARD_KEY_c0041=enter
+
 # buzztv bt-300/bt-400 smart remote
 evdev:input:b0005v0957p1001*
  KEYBOARD_KEY_c0041=enter

@@ -1,4 +1,4 @@
-From 336acb5208b6c3b191772c4bbe89453af8c40313 Mon Sep 17 00:00:00 2001
+From c73239247ba486f899fcd291334a4ff3536cfba4 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Sat, 1 Jun 2024 15:51:07 +0000
 Subject: [PATCH 13/35] FROMGIT(6.12): media: meson: vdec: add GXLX SoC

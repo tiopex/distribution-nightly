@@ -164,6 +164,10 @@ devices = \
         'dtb': '',
         'config': 'p212_defconfig'
       },
+      'alta': {
+        'dtb': 'meson-g12b-a311d-libretech-cc.dtb',
+        'config': 'aml-a311d-cc_defconfig'
+      },
       'bananapi-m2s': {
         'dtb': 'meson-g12b-a311d-bananapi-m2s.dtb',
         'config': 'bananapi-m2s_defconfig'
@@ -227,6 +231,10 @@ devices = \
       'radxa-zero2': {
         'dtb': 'meson-g12b-radxa-zero2.dtb',
         'config': 'radxa-zero2_defconfig'
+      },
+      'solitude': {
+        'dtb': 'meson-sm1-s905d3-libretech-cc.dtb',
+        'config': 'aml-s905d3-cc_defconfig'
       },
       'wetek-core2': {
         'dtb': 'meson-gxm-wetek-core2.dtb',

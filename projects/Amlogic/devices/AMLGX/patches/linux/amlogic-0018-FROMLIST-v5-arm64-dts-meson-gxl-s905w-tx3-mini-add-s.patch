@@ -1,4 +1,4 @@
-From 8264a2fb9e7c074325c84785f4350b8e211b1360 Mon Sep 17 00:00:00 2001
+From 0d6b6009384cca989fa528882718a6d4f526afba Mon Sep 17 00:00:00 2001
 From: Heiner Kallweit <hkallweit1@gmail.com>
 Date: Mon, 4 Apr 2022 18:52:34 +0000
 Subject: [PATCH 18/35] FROMLIST(v5): arm64: dts: meson-gxl-s905w-tx3-mini: add

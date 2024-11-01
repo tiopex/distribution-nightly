@@ -1,4 +1,4 @@
-From 77d60071b759c40f416b143c704c6a4b9540bc1a Mon Sep 17 00:00:00 2001
+From 8c7e90a5dacf95f777c1f4b002670668b13b164d Mon Sep 17 00:00:00 2001
 From: Neil Armstrong <neil.armstrong@linaro.org>
 Date: Wed, 28 Aug 2024 15:53:56 +0200
 Subject: [PATCH 11/35] FROMGIT(6.12): arm64: dts: amlogic: add clock and

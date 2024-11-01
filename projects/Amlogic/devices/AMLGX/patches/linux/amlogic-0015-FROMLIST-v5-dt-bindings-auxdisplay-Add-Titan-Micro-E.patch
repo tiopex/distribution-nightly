@@ -1,4 +1,4 @@
-From a909b03eaa420b27578c39b37782d083dc78fbc5 Mon Sep 17 00:00:00 2001
+From a84f13e095df1e67ad3c68542466dd406d9022ec Mon Sep 17 00:00:00 2001
 From: Heiner Kallweit <hkallweit1@gmail.com>
 Date: Sun, 20 Feb 2022 08:24:47 +0000
 Subject: [PATCH 15/35] FROMLIST(v5): dt-bindings: auxdisplay: Add Titan Micro
