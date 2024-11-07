@@ -28,6 +28,7 @@ make_target() {
   export CMAKE_TOOLCHAIN_FILE="${CMAKE_CONF}"
   export CMAKE_INSTALL_PREFIX="/usr"
 
+  export BINDGEN_EXTRA_CLANG_ARGS="--sysroot=${SYSROOT_PREFIX}"
   export RUSTC_LINKER=${CC}
   cargo build \
     --target ${TARGET_NAME} \
