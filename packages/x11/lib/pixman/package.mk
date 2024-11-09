@@ -18,9 +18,9 @@ if [ "${TARGET_ARCH}" = arm ]; then
   else
     PIXMAN_NEON="-Dneon=disabled"
   fi
-  PIXMAN_CONFIG="-Dmmx=disabled -Dsse2=disabled -Dvmx=disabled -Darm-simd=enabled ${PIXMAN_NEON} -Diwmmxt=disabled"
+  PIXMAN_CONFIG="-Dmmx=disabled -Dsse2=disabled -Dvmx=disabled -Darm-simd=enabled ${PIXMAN_NEON}"
 elif [ "${TARGET_ARCH}" = aarch64 ]; then
-  PIXMAN_CONFIG="-Dmmx=disabled -Dsse2=disabled -Dvmx=disabled -Darm-simd=disabled -Dneon=disabled -Diwmmxt=disabled"
+  PIXMAN_CONFIG="-Dmmx=disabled -Dsse2=disabled -Dvmx=disabled -Darm-simd=disabled -Dneon=disabled"
 elif [ "${TARGET_ARCH}" = x86_64  ]; then
   PIXMAN_CONFIG="-Dmmx=enabled -Dsse2=enabled -Dssse3=disabled -Dvmx=disabled -Darm-simd=disabled -Dneon=disabled"
 fi
