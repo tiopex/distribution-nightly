@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xtrans"
-PKG_VERSION="1.5.1"
-PKG_SHA256="dea80fbd8c3c941495b4b1d2785cb652815d016849a0d2ef90d1140de916993e"
+PKG_VERSION="1.5.2"
+PKG_SHA256="5c5cbfe34764a9131d048f03c31c19e57fb4c682d67713eab6a65541b4dff86c"
 PKG_LICENSE="OSS"
 PKG_SITE="https://www.X.org"
 PKG_URL="https://xorg.freedesktop.org/archive/individual/lib/${PKG_NAME}-${PKG_VERSION}.tar.xz"
