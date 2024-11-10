@@ -83,7 +83,7 @@ END
   CARGO_HOME="${PKG_BUILD}/cargo_home"
   mkdir -p "${CARGO_HOME}"
 
-  cat >${CARGO_HOME}/config <<END
+  cat >${CARGO_HOME}/config.toml <<END
 [target.${TARGET_NAME}]
 linker = "${TARGET_PREFIX}gcc"
 
