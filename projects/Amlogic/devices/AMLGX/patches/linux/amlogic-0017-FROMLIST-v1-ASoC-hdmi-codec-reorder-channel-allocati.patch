@@ -1,7 +1,7 @@
-From 9f81dde746e981d7e2f52b62c082a89832b76070 Mon Sep 17 00:00:00 2001
+From 79ca58ba94a4aeee71f24fe055a573655e175899 Mon Sep 17 00:00:00 2001
 From: Jonas Karlman <jonas@kwiboo.se>
 Date: Sun, 23 Dec 2018 02:24:38 +0100
-Subject: [PATCH 20/35] FROMLIST(v1): ASoC: hdmi-codec: reorder channel
+Subject: [PATCH 17/36] FROMLIST(v1): ASoC: hdmi-codec: reorder channel
  allocation list
 
 Wrong channel allocation is selected by hdmi_codec_get_ch_alloc_table_idx().

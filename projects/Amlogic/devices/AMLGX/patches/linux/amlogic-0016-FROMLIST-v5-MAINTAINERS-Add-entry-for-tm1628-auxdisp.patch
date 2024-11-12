@@ -1,7 +1,7 @@
-From e7fb99446f773b250152894f4dbf830f44a4d312 Mon Sep 17 00:00:00 2001
+From fbf9c7c1eac2bf9835e53c08083bdadd26fb88fe Mon Sep 17 00:00:00 2001
 From: Heiner Kallweit <hkallweit1@gmail.com>
 Date: Mon, 4 Apr 2022 18:53:32 +0000
-Subject: [PATCH 19/35] FROMLIST(v5): MAINTAINERS: Add entry for tm1628
+Subject: [PATCH 16/36] FROMLIST(v5): MAINTAINERS: Add entry for tm1628
  auxdisplay driver
 
 Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
@@ -10,10 +10,10 @@ Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index cc40a9d9b8cd..2f101da4c452 100644
+index b878ddc99f94..f919e8b59031 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -23098,6 +23098,13 @@ W:	http://sourceforge.net/projects/tlan/
+@@ -23342,6 +23342,13 @@ W:	http://sourceforge.net/projects/tlan/
  F:	Documentation/networking/device_drivers/ethernet/ti/tlan.rst
  F:	drivers/net/ethernet/ti/tlan.*
  
