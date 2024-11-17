@@ -21,8 +21,7 @@
     KERNEL_MAKE_EXTRACMD+=" rockchip/rk3288-tinker.dtb"
     KERNEL_MAKE_EXTRACMD+=" rockchip/rk3288-tinker-s.dtb"
 
-  # Mali GPU family
-    MALI_FAMILY="t760"
+  # Graphic drivers to use
     GRAPHIC_DRIVERS="panfrost"
 
   # kernel serial console
