@@ -1,7 +1,7 @@
-From 0ddd7b0801bd3e83baecd21693d38ba7517f6d74 Mon Sep 17 00:00:00 2001
+From 9097390dd2de048a9060d8161e3e63c3ef6fa60f Mon Sep 17 00:00:00 2001
 From: Anssi Hannula <anssi.hannula@iki.fi>
 Date: Sun, 17 Apr 2022 04:37:48 +0000
-Subject: [PATCH 09/35] LOCAL: ASoC: meson: assign internal PCM
+Subject: [PATCH 09/36] LOCAL: ASoC: meson: assign internal PCM
  chmap/ELD/IEC958 kctls to device 0
 
 On SoC sound devices utilizing codec2codec DAI links with an HDMI codec the kctls
@@ -24,10 +24,10 @@ Tested-by: Christian Hewitt <christianshewitt@gmail.com>
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/sound/core/pcm_lib.c b/sound/core/pcm_lib.c
-index 6e7905749c4a..f554295cc132 100644
+index 6eaa950504cf..dbcf1f613fb4 100644
 --- a/sound/core/pcm_lib.c
 +++ b/sound/core/pcm_lib.c
-@@ -2609,7 +2609,10 @@ int snd_pcm_add_chmap_ctls(struct snd_pcm *pcm, int stream,
+@@ -2612,7 +2612,10 @@ int snd_pcm_add_chmap_ctls(struct snd_pcm *pcm, int stream,
  		knew.name = "Playback Channel Map";
  	else
  		knew.name = "Capture Channel Map";
