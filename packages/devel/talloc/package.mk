@@ -23,6 +23,7 @@ configure_package() {
                       --cross-compile \
                       --cross-answers=${PKG_BUILD}/cache.txt \
                       --hostcc=gcc \
+                      --disable-python \
                       --disable-rpath \
                       --disable-rpath-install \
                       --disable-rpath-private-install"
