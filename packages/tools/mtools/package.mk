@@ -3,8 +3,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="mtools"
-PKG_VERSION="4.0.45"
-PKG_SHA256="0b008a96bd0efe0e542fa4383d469af66bc4a93394990b103730a8160a67d618"
+PKG_VERSION="4.0.46"
+PKG_SHA256="9aad8dd859f88fb7787924ec47590192d3abf7bad6c840509c854290d6bc16c0"
 PKG_LICENSE="GPL"
 PKG_SITE="http://www.gnu.org/software/mtools/"
 PKG_URL="http://ftpmirror.gnu.org/${PKG_NAME}/${PKG_NAME}-${PKG_VERSION}.tar.bz2"
