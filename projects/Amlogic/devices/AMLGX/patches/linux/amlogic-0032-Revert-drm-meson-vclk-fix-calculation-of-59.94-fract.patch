@@ -1,7 +1,7 @@
-From f70aca0039b995753470bc49c6d76dc398c59cfa Mon Sep 17 00:00:00 2001
+From dc557b41ff1fb30b13ac3e5fd5db8cbee9b523f6 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Sun, 7 Jul 2024 03:16:12 +0000
-Subject: [PATCH 35/36] Revert "drm/meson: vclk: fix calculation of 59.94
+Subject: [PATCH 32/33] Revert "drm/meson: vclk: fix calculation of 59.94
  fractional rates"
 
 This reverts commit bfbc68e4d8695497f858a45a142665e22a512ea3.
