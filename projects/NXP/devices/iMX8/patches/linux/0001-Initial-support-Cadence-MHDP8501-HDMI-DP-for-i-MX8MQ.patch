@@ -1,10 +1,10 @@
-From patchwork Tue Oct 29 06:02:09 2024
+From patchwork Tue Nov 26 14:11:46 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [PATCH v18 0/8] Initial support Cadence MHDP8501(HDMI/DP) for i.MX8MQ
+Subject: [PATCH v19 0/8] Initial support Cadence MHDP8501(HDMI/DP) for i.MX8MQ
 From: Sandor Yu <Sandor.yu@nxp.com>
-Message-Id: <cover.1730172244.git.Sandor.yu@nxp.com>
+Message-Id: <cover.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -16,7 +16,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:08 +0800
+Date: Tue, 26 Nov 2024 22:11:45 +0800
 
 The patch set initial support Cadence MHDP8501(HDMI/DP) DRM bridge
 driver and Cadence HDP-TX PHY(HDMI/DP) driver for Freescale i.MX8MQ.
@@ -40,6 +40,33 @@ PHY driver patches:
 i.MX8M/TQMa8Mx DT patches:
   #7: Add DT nodes for DCSS/HDMI pipeline
   #8: Enable HDMI for TQMa8Mx/MBa8Mx
+
+v18->v19:
+Patch #1
+- use guard(mutex)
+- Add kerneldocs for all new APIs.
+- Detail comments for mailbox access specific case.
+- remove cdns_mhdp_dp_reg_write() because it is not needed by driver now.
+
+Patch #3
+- move property data-lanes to endpoint of port@1
+
+Patch #4
+- get endpoint for data-lanes as it had move to endpoint of port@1
+- update clock management as devm_clk_get_enabled() introduced.
+- Fix clear_infoframe() function is not work issue.
+- Manage PHY power state via phy_power_on() and phy_power_off().
+
+Patch #6
+- Simplify the PLL table by removing unused and constant data
+- Remove PHY power management, controller driver will handle them.
+- Remove enum dp_link_rate
+- introduce read_pll_timeout.
+- update clock management as devm_clk_get_enabled() introduced.
+- remove cdns_hdptx_phy_init() and cdns_hdptx_phy_remove().
+
+Patch #8:
+- move property data-lanes to endpoint of port@1
 
 v17->v18:
 Patch #1
@@ -291,29 +318,29 @@ Sandor Yu (6):
   dt-bindings: phy: Add Freescale iMX8MQ DP and HDMI PHY
   phy: freescale: Add DisplayPort/HDMI Combo-PHY driver for i.MX8MQ
 
- .../display/bridge/cdns,mhdp8501.yaml         |  112 ++
+ .../display/bridge/cdns,mhdp8501.yaml         |  120 ++
  .../bindings/phy/fsl,imx8mq-dp-hdmi-phy.yaml  |   51 +
- .../dts/freescale/imx8mq-tqma8mq-mba8mx.dts   |   21 +
+ .../dts/freescale/imx8mq-tqma8mq-mba8mx.dts   |   26 +
  arch/arm64/boot/dts/freescale/imx8mq.dtsi     |   68 +
  arch/arm64/boot/dts/freescale/mba8mx.dtsi     |   11 +
- drivers/gpu/drm/bridge/cadence/Kconfig        |   20 +
+ drivers/gpu/drm/bridge/cadence/Kconfig        |   24 +
  drivers/gpu/drm/bridge/cadence/Makefile       |    3 +
- .../gpu/drm/bridge/cadence/cdns-mhdp-helper.c |  414 +++++
- .../drm/bridge/cadence/cdns-mhdp8501-core.c   |  329 ++++
+ .../gpu/drm/bridge/cadence/cdns-mhdp-helper.c |  565 ++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-core.c   |  322 +++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.h   |  376 +++++
- .../gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c |  683 +++++++++
+ .../gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c |  686 +++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   |  764 ++++++++++
- .../drm/bridge/cadence/cdns-mhdp8546-core.c   |  487 +-----
+ .../drm/bridge/cadence/cdns-mhdp8546-core.c   |  487 +------
  .../drm/bridge/cadence/cdns-mhdp8546-core.h   |   47 +-
- .../drm/bridge/cadence/cdns-mhdp8546-hdcp.c   |  236 +--
+ .../drm/bridge/cadence/cdns-mhdp8546-hdcp.c   |  236 +---
  .../drm/bridge/cadence/cdns-mhdp8546-hdcp.h   |   18 +-
  drivers/phy/freescale/Kconfig                 |   10 +
  drivers/phy/freescale/Makefile                |    1 +
- drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c  | 1337 +++++++++++++++++
- include/drm/bridge/cdns-mhdp-helper.h         |  130 ++
+ drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c  | 1237 +++++++++++++++++
+ include/drm/bridge/cdns-mhdp-helper.h         |  129 ++
  include/linux/phy/phy-hdmi.h                  |   19 +
  include/linux/phy/phy.h                       |    7 +-
- 22 files changed, 4464 insertions(+), 680 deletions(-)
+ 22 files changed, 4527 insertions(+), 680 deletions(-)
  create mode 100644 Documentation/devicetree/bindings/display/bridge/cdns,mhdp8501.yaml
  create mode 100644 Documentation/devicetree/bindings/phy/fsl,imx8mq-dp-hdmi-phy.yaml
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp-helper.c
@@ -330,15 +357,15 @@ Sandor Yu (6):
 
 
 
-From patchwork Tue Oct 29 06:02:09 2024
+From patchwork Tue Nov 26 14:11:46 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,1/8] drm: bridge: Cadence: Create MHDP helper driver
+Subject: [v19,1/8] drm: bridge: Cadence: Create MHDP helper driver
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622013
+X-Patchwork-Id: 626189
 Message-Id: 
- <9fe153c4f0b8616782fba1f7c8c2223c4f0c1d78.1730172244.git.Sandor.yu@nxp.com>
+ <4a6e511fed26289eeb63109882f7657ab5d4415d.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -350,7 +377,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:09 +0800
+Date: Tue, 26 Nov 2024 22:11:46 +0800
 
 Mailbox access functions in MHDP8546 will be share to other MHDP driver
 and Cadence HDP-TX HDMI/DP PHY drivers.
@@ -380,6 +407,12 @@ GENERAL_REGISTER_WRITE.
 
 Signed-off-by: Sandor Yu <Sandor.yu@nxp.com>
 ---
+v18->v19:
+- Use guard(mutex)
+- Add kerneldocs for all new APIs.
+- Detail comments for mailbox access specific case.
+- Remove cdns_mhdp_dp_reg_write() because it is not needed by driver now.
+
 v17->v18:
 - Create three ordinary mailbox access APIs
     cdns_mhdp_mailbox_send
@@ -398,33 +431,37 @@ v16->v17:
 v12->v16:
  *No change.
 
- drivers/gpu/drm/bridge/cadence/Kconfig        |   4 +
+ drivers/gpu/drm/bridge/cadence/Kconfig        |   8 +
  drivers/gpu/drm/bridge/cadence/Makefile       |   1 +
- .../gpu/drm/bridge/cadence/cdns-mhdp-helper.c | 414 +++++++++++++++
- .../drm/bridge/cadence/cdns-mhdp8546-core.c   | 487 +++---------------
+ .../gpu/drm/bridge/cadence/cdns-mhdp-helper.c | 565 ++++++++++++++++++
+ .../drm/bridge/cadence/cdns-mhdp8546-core.c   | 487 +++------------
  .../drm/bridge/cadence/cdns-mhdp8546-core.h   |  47 +-
- .../drm/bridge/cadence/cdns-mhdp8546-hdcp.c   | 236 +--------
+ .../drm/bridge/cadence/cdns-mhdp8546-hdcp.c   | 236 +-------
  .../drm/bridge/cadence/cdns-mhdp8546-hdcp.h   |  18 +-
- include/drm/bridge/cdns-mhdp-helper.h         | 130 +++++
- 8 files changed, 658 insertions(+), 679 deletions(-)
+ include/drm/bridge/cdns-mhdp-helper.h         | 129 ++++
+ 8 files changed, 812 insertions(+), 679 deletions(-)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp-helper.c
  create mode 100644 include/drm/bridge/cdns-mhdp-helper.h
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
-index cced81633ddcd..e0973339e9e33 100644
+index cced81633ddcd..1b315593a6d73 100644
 --- a/drivers/gpu/drm/bridge/cadence/Kconfig
 +++ b/drivers/gpu/drm/bridge/cadence/Kconfig
-@@ -21,6 +21,9 @@ config DRM_CDNS_DSI_J721E
+@@ -21,6 +21,13 @@ config DRM_CDNS_DSI_J721E
  	  the routing of the DSS DPI signal to the Cadence DSI.
  endif
  
 +config CDNS_MHDP_HELPER
-+	tristate
++	tristate "Cadence MHDP Helper driver"
++	help
++	  Enable Cadence MHDP helpers for mailbox, HDMI and DP.
++	  This driver provides a foundational layer of mailbox communication for
++	  various Cadence MHDP IP implementations, such as HDMI and DisplayPort.
 +
  config DRM_CDNS_MHDP8546
  	tristate "Cadence DPI/DP bridge"
  	select DRM_DISPLAY_DP_HELPER
-@@ -28,6 +31,7 @@ config DRM_CDNS_MHDP8546
+@@ -28,6 +35,7 @@ config DRM_CDNS_MHDP8546
  	select DRM_DISPLAY_HELPER
  	select DRM_KMS_HELPER
  	select DRM_PANEL_BRIDGE
@@ -446,10 +483,10 @@ index c95fd5b81d137..087dc074820d7 100644
  cdns-mhdp8546-$(CONFIG_DRM_CDNS_MHDP8546_J721E) += cdns-mhdp8546-j721e.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp-helper.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp-helper.c
 new file mode 100644
-index 0000000000000..f39228a78c7cb
+index 0000000000000..93b78f65dd8b8
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp-helper.c
-@@ -0,0 +1,414 @@
+@@ -0,0 +1,565 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2023, 2024 NXP Semiconductor, Inc.
@@ -514,12 +551,14 @@ index 0000000000000..f39228a78c7cb
 +
 +	mbox_size = get_unaligned_be16(header + 2);
 +
-+	if (opcode != header[0] || module_id != header[1] ||
++	/*
++	 * If the message in mailbox is not what we want, we need to
++	 * clear the mailbox by reading its contents.
++	 * Response data length for HDCP TX HDCP_TRAN_IS_REC_ID_VALID depend on case.
++	 */
++	if (opcode != header[0] ||
++	    module_id != header[1] ||
 +	   (opcode != HDCP_TRAN_IS_REC_ID_VALID && req_size != mbox_size)) {
-+		/*
-+		 * If the message in mailbox is not what we want, we need to
-+		 * clear the mailbox by reading its contents.
-+		 */
 +		for (i = 0; i < mbox_size; i++)
 +			if (mhdp_mailbox_read(regs) < 0)
 +				break;
@@ -572,21 +611,43 @@ index 0000000000000..f39228a78c7cb
 +	return 0;
 +}
 +
++/**
++ * cdns_mhdp_mailbox_send - Sends a message via the MHDP mailbox.
++ *
++ * This function sends a message via the MHDP mailbox.
++ *
++ * @base: Pointer to the CDNS MHDP base structure.
++ * @module_id: ID of the module to send the message to.
++ * @opcode: Operation code of the message.
++ * @size: Size of the message data.
++ * @message: Pointer to the message data.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_mailbox_send(struct cdns_mhdp_base *base, u8 module_id,
 +			   u8 opcode, u16 size, u8 *message)
 +{
-+	int ret;
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
-+
-+	ret = mhdp_mailbox_send(base->regs, module_id, opcode, size, message);
-+
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
-+	return ret;
++	return mhdp_mailbox_send(base->regs, module_id, opcode, size, message);
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_mailbox_send);
 +
++/**
++ * cdns_mhdp_mailbox_send_recv - Sends a message and receives a response.
++ *
++ * This function sends a message via the mailbox and then receives a response.
++ *
++ * @base: Pointer to the CDNS MHDP base structure.
++ * @module_id: ID of the module to send the message to.
++ * @opcode: Operation code of the message.
++ * @msg_size: Size of the message data.
++ * @msg: Pointer to the message data.
++ * @resp_size: Size of the response buffer.
++ * @resp: Pointer to the response buffer.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_mailbox_send_recv(struct cdns_mhdp_base *base,
 +				u8 module_id, u8 opcode,
 +				u16 msg_size, u8 *msg,
@@ -594,29 +655,51 @@ index 0000000000000..f39228a78c7cb
 +{
 +	int ret;
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
 +	ret = mhdp_mailbox_send(base->regs, module_id,
 +				opcode, msg_size, msg);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d send failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_header(base->regs, module_id,
 +				       opcode, resp_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d recv header failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_data(base->regs, resp, resp_size);
-+out:
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
 +	if (ret)
-+		dev_err(base->dev, "ModuleID=%d, CMD=%d failed: %d\n",
++		dev_err(base->dev, "ModuleID=%d, CMD=%d recv data failed: %d\n",
 +			module_id, opcode, ret);
 +	return ret;
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_mailbox_send_recv);
 +
++/**
++ * cdns_mhdp_mailbox_send_recv_multi - Sends a message and receives multiple responses.
++ *
++ * This function sends a message to a specified module via the MHDP mailbox and
++ * then receives multiple responses from the module.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param module_id: ID of the module to send the message to.
++ * @param opcode: Operation code of the message.
++ * @param msg_size: Size of the message data.
++ * @param msg: Pointer to the message data.
++ * @param opcode_resp: Operation code of the response.
++ * @param resp1_size: Size of the first response buffer.
++ * @param resp1: Pointer to the first response buffer.
++ * @param resp2_size: Size of the second response buffer.
++ * @param resp2: Pointer to the second response buffer.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_mailbox_send_recv_multi(struct cdns_mhdp_base *base,
 +				      u8 module_id, u8 opcode,
 +				      u16 msg_size, u8 *msg,
@@ -626,53 +709,77 @@ index 0000000000000..f39228a78c7cb
 +{
 +	int ret;
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
 +	ret = mhdp_mailbox_send(base->regs, module_id,
 +				opcode, msg_size, msg);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d send failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_header(base->regs, module_id, opcode_resp,
 +				       resp1_size + resp2_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv header failed: %d\n",
++			module_id, opcode_resp, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_data(base->regs, resp1, resp1_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv data1 failed: %d\n",
++			module_id, opcode_resp, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_data(base->regs, resp2, resp2_size);
-+out:
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
 +	if (ret)
-+		dev_err(base->dev, "ModuleID=%d, MSG_CMD=%d Resp_CMD=%d failed: %d\n",
-+			module_id, opcode, opcode_resp, ret);
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv data1 failed: %d\n",
++			module_id, opcode_resp, ret);
 +	return ret;
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_mailbox_send_recv_multi);
 +
-+/*
-+ * Secure mailbox access functions:
-+ * These functions handle secure mailbox communication, which differs
-+ * from non-secure mailbox access. They use the secure address.
++/**
++ * cdns_mhdp_secure_mailbox_send - Sends a secure message via the mailbox.
++ *
++ * This function sends a secure message to a specified module via the MHDP mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param module_id: ID of the module to send the message to.
++ * @param opcode: Operation code of the message.
++ * @param size: Size of the message data.
++ * @param message: Pointer to the message data.
++ *
++ * Returns: 0 on success, negative error code on failure.
 + */
 +int cdns_mhdp_secure_mailbox_send(struct cdns_mhdp_base *base, u8 module_id,
 +				  u8 opcode, u16 size, u8 *message)
 +{
-+	int ret;
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
-+
-+	ret = mhdp_mailbox_send(base->sapb_regs, module_id, opcode, size, message);
-+
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
-+	return ret;
++	return mhdp_mailbox_send(base->sapb_regs, module_id, opcode, size, message);
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_secure_mailbox_send);
 +
++/**
++ * cdns_mhdp_secure_mailbox_send_recv - Sends a secure message and receives a response.
++ *
++ * This function sends a secure message to a specified module via the mailbox and
++ * then receives a response from the module.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param module_id: ID of the module to send the message to.
++ * @param opcode: Operation code of the message.
++ * @param msg_size: Size of the message data.
++ * @param msg: Pointer to the message data.
++ * @param resp_size: Size of the response buffer.
++ * @param resp: Pointer to the response buffer.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_secure_mailbox_send_recv(struct cdns_mhdp_base *base,
 +				       u8 module_id, u8 opcode,
 +				       u16 msg_size, u8 *msg,
@@ -680,29 +787,50 @@ index 0000000000000..f39228a78c7cb
 +{
 +	int ret;
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
 +	ret = mhdp_mailbox_send(base->sapb_regs, module_id,
 +				opcode, msg_size, msg);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d send failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_header(base->sapb_regs, module_id,
 +				       opcode, resp_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d recv header failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_data(base->sapb_regs, resp, resp_size);
-+out:
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
 +	if (ret)
-+		dev_err(base->dev, "ModuleID=%d, CMD=%d failed: %d\n",
++		dev_err(base->dev, "ModuleID=%d, CMD=%d recv data failed: %d\n",
 +			module_id, opcode, ret);
 +	return ret;
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_secure_mailbox_send_recv);
 +
++/**
++ * cdns_mhdp_secure_mailbox_send_recv_multi - Sends a secure message and receives multiple responses.
++ *
++ * This function sends a secure message to a specified module and receives multiple responses.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param module_id: ID of the module to send the message to.
++ * @param opcode: Operation code of the message.
++ * @param msg_size: Size of the message data.
++ * @param msg: Pointer to the message data.
++ * @param opcode_resp: Operation code of the response.
++ * @param resp1_size: Size of the first response buffer.
++ * @param resp1: Pointer to the first response buffer.
++ * @param resp2_size: Size of the second response buffer.
++ * @param resp2: Pointer to the second response buffer.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_secure_mailbox_send_recv_multi(struct cdns_mhdp_base *base,
 +					     u8 module_id, u8 opcode,
 +					     u16 msg_size, u8 *msg,
@@ -712,39 +840,61 @@ index 0000000000000..f39228a78c7cb
 +{
 +	int ret;
 +
-+	mutex_lock(&mhdp_mailbox_mutex);
++	guard(mutex)(&mhdp_mailbox_mutex);
 +
 +	ret = mhdp_mailbox_send(base->sapb_regs, module_id,
 +				opcode, msg_size, msg);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, CMD=%d send failed: %d\n",
++			module_id, opcode, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_header(base->sapb_regs, module_id,
 +				       opcode_resp,
 +				       resp1_size + resp2_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv header failed: %d\n",
++			module_id, opcode_resp, ret);
++		return ret;
++	}
 +
 +	ret = mhdp_mailbox_recv_data(base->sapb_regs, resp1, resp1_size);
-+	if (ret)
-+		goto out;
++	if (ret) {
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv data1 failed: %d\n",
++			module_id, opcode_resp, ret);
++		return ret;
++	}
 +
++	/*
++	 * Response data length for HDCP TX HDCP_TRAN_IS_REC_ID_VALID depend on
++	 * the number of HDCP receivers in resp1[0].
++	 * 1 for regular case, more can be in repeater.
++	 */
 +	if (module_id == MB_MODULE_ID_HDCP_TX &&
 +	    opcode == HDCP_TRAN_IS_REC_ID_VALID)
 +		ret = mhdp_mailbox_recv_data(base->sapb_regs, resp2, 5 * resp1[0]);
 +	else
 +		ret = mhdp_mailbox_recv_data(base->sapb_regs, resp2, resp2_size);
-+out:
-+	mutex_unlock(&mhdp_mailbox_mutex);
-+
 +	if (ret)
-+		dev_err(base->dev, "ModuleID=%d, CMD=%d failed: %d\n",
-+			module_id, opcode, ret);
++		dev_err(base->dev, "ModuleID=%d, Resp_CMD=%d recv data2 failed: %d\n",
++			module_id, opcode_resp, ret);
 +	return ret;
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_secure_mailbox_send_recv_multi);
 +
-+/* General read/write helper functions */
++/**
++ * cdns_mhdp_reg_read - Reads a general register value.
++ *
++ * This function reads the value from a general register
++ * using the mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param addr: Address of the register to read.
++ * @param value: Pointer to store the read value.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_reg_read(struct cdns_mhdp_base *base, u32 addr, u32 *value)
 +{
 +	u8 msg[4], resp[8];
@@ -775,6 +925,17 @@ index 0000000000000..f39228a78c7cb
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_reg_read);
 +
++/**
++ * cdns_mhdp_reg_write - Writes a value to a general register.
++ *
++ * This function writes a value to a general register using the mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param addr: Address of the register to write to.
++ * @param val: Value to write to the register.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_reg_write(struct cdns_mhdp_base *base, u32 addr, u32 val)
 +{
 +	u8 msg[8];
@@ -789,18 +950,20 @@ index 0000000000000..f39228a78c7cb
 +EXPORT_SYMBOL_GPL(cdns_mhdp_reg_write);
 +
 +/* DPTX helper functions */
-+int cdns_mhdp_dp_reg_write(struct cdns_mhdp_base *base, u16 addr, u32 val)
-+{
-+	u8 msg[6];
-+
-+	put_unaligned_be16(addr, msg);
-+	put_unaligned_be32(val, msg + 2);
-+
-+	return cdns_mhdp_mailbox_send(base, MB_MODULE_ID_DP_TX,
-+				      DPTX_WRITE_REGISTER, sizeof(msg), msg);
-+}
-+EXPORT_SYMBOL_GPL(cdns_mhdp_dp_reg_write);
-+
++/**
++ * cdns_mhdp_dp_reg_write_bit - Writes a bit field to a DP register.
++ *
++ * This function writes a specific bit field within a DP register
++ * using the MHDP mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param addr: Address of the DP register.
++ * @param start_bit: Starting bit position within the register.
++ * @param bits_no: Number of bits to write.
++ * @param val: Value to write to the bit field.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_dp_reg_write_bit(struct cdns_mhdp_base *base, u16 addr,
 +			       u8 start_bit, u8 bits_no, u32 val)
 +{
@@ -816,6 +979,19 @@ index 0000000000000..f39228a78c7cb
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_dp_reg_write_bit);
 +
++/**
++ * cdns_mhdp_dpcd_read - Reads data from a DPCD register.
++ *
++ * This function reads data from a specified DPCD register
++ * using the MHDP mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param addr: Address of the DPCD register to read.
++ * @param data: Buffer to store the read data.
++ * @param len: Length of the data to read.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_dpcd_read(struct cdns_mhdp_base *base,
 +			u32 addr, u8 *data, u16 len)
 +{
@@ -834,6 +1010,18 @@ index 0000000000000..f39228a78c7cb
 +}
 +EXPORT_SYMBOL_GPL(cdns_mhdp_dpcd_read);
 +
++/**
++ * cdns_mhdp_dpcd_write - Writes data to a DPCD register.
++ *
++ * This function writes data to a specified DPCD register
++ * using the MHDP mailbox.
++ *
++ * @param base: Pointer to the CDNS MHDP base structure.
++ * @param addr: Address of the DPCD register to write to.
++ * @param value: Value to write to the register.
++ *
++ * Returns: 0 on success, negative error code on failure.
++ */
 +int cdns_mhdp_dpcd_write(struct cdns_mhdp_base *base, u32 addr, u8 value)
 +{
 +	u8 msg[6], reg[5];
@@ -865,7 +1053,7 @@ index 0000000000000..f39228a78c7cb
 +MODULE_AUTHOR("Sandor Yu <Sandor.yu@nxp.com>");
 +MODULE_LICENSE("GPL");
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
-index 41f72d458487f..291631c87d895 100644
+index 41f72d458487f..9ce1fcf7b88ea 100644
 --- a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8546-core.c
 @@ -73,302 +73,18 @@ static void cdns_mhdp_bridge_hpd_disable(struct drm_bridge *bridge)
@@ -1312,7 +1500,7 @@ index 41f72d458487f..291631c87d895 100644
 +						MB_MODULE_ID_DP_TX,
 +						DPTX_ADJUST_LT,
 +						sizeof(payload), payload,
-+						HDMI_TX_EDID,
++						DPTX_READ_DPCD,
 +						sizeof(hdr), hdr,
 +						DP_LINK_STATUS_SIZE,
 +						link_status);
@@ -2061,10 +2249,10 @@ index 334c0b8b0d4f5..fff4194c7dfd0 100644
  	HDCP_CONTENT_TYPE_1,
 diff --git a/include/drm/bridge/cdns-mhdp-helper.h b/include/drm/bridge/cdns-mhdp-helper.h
 new file mode 100644
-index 0000000000000..45e28c733842a
+index 0000000000000..25b9737de615f
 --- /dev/null
 +++ b/include/drm/bridge/cdns-mhdp-helper.h
-@@ -0,0 +1,130 @@
+@@ -0,0 +1,129 @@
 +/* SPDX-License-Identifier: GPL-2.0-only */
 +/*
 + * Copyright (C) 2023-2024 NXP Semiconductor, Inc.
@@ -2188,7 +2376,6 @@ index 0000000000000..45e28c733842a
 +int cdns_mhdp_reg_write(struct cdns_mhdp_base *base, u32 addr, u32 val);
 +
 +/* DPTX commands helper functions */
-+int cdns_mhdp_dp_reg_write(struct cdns_mhdp_base *base, u16 addr, u32 val);
 +int cdns_mhdp_dp_reg_write_bit(struct cdns_mhdp_base *base, u16 addr,
 +			       u8 start_bit, u8 bits_no, u32 val);
 +int cdns_mhdp_dpcd_read(struct cdns_mhdp_base *base,
@@ -2196,15 +2383,15 @@ index 0000000000000..45e28c733842a
 +int cdns_mhdp_dpcd_write(struct cdns_mhdp_base *base, u32 addr, u8 value);
 +#endif /* __CDNS_MHDP_HELPER_H__ */
 
-From patchwork Tue Oct 29 06:02:10 2024
+From patchwork Tue Nov 26 14:11:47 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,2/8] phy: Add HDMI configuration options
+Subject: [v19,2/8] phy: Add HDMI configuration options
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622014
+X-Patchwork-Id: 626190
 Message-Id: 
- <64f6885b5a5ca89c8214b3138cb58c3133ac2109.1730172244.git.Sandor.yu@nxp.com>
+ <43757beec6cd418fc17252283de38009d531c7c7.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -2216,7 +2403,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:10 +0800
+Date: Tue, 26 Nov 2024 22:11:47 +0800
 
 Allow HDMI PHYs to be configured through the generic
 functions through a custom structure added to the generic union.
@@ -2229,7 +2416,7 @@ Signed-off-by: Sandor Yu <Sandor.yu@nxp.com>
 Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 Reviewed-by: Maxime Ripard <mripard@kernel.org>
 ---
-v17->v18:
+v17->v19:
  *No change.
 
 v16->v17:
@@ -2305,15 +2492,15 @@ index 03cd5bae92d3f..4ac486b101fe4 100644
  
  /**
 
-From patchwork Tue Oct 29 06:02:11 2024
+From patchwork Tue Nov 26 14:11:48 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,3/8] dt-bindings: display: bridge: Add Cadence MHDP8501
+Subject: [v19,3/8] dt-bindings: display: bridge: Add Cadence MHDP8501
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622015
+X-Patchwork-Id: 626191
 Message-Id: 
- <e11ba0cf836d6f27935f58b7987e792026ab0233.1730172244.git.Sandor.yu@nxp.com>
+ <e495a40a0add052d4f8cdeb4a81ea7408cdccaf6.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -2325,12 +2512,15 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:11 +0800
+Date: Tue, 26 Nov 2024 22:11:48 +0800
 
 Add bindings for Cadence MHDP8501 DisplayPort/HDMI bridge.
 
 Signed-off-by: Sandor Yu <Sandor.yu@nxp.com>
 ---
+v18->v19:
+- move data-lanes property to endpoint of port@1
+
 v17->v18:
 - remove lane-mapping and replace it with data-lanes
 - remove r-b tag as property changed.
@@ -2341,16 +2531,16 @@ v16->v17:
 v9->v16:
  *No change
 
- .../display/bridge/cdns,mhdp8501.yaml         | 112 ++++++++++++++++++
- 1 file changed, 112 insertions(+)
+ .../display/bridge/cdns,mhdp8501.yaml         | 120 ++++++++++++++++++
+ 1 file changed, 120 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/display/bridge/cdns,mhdp8501.yaml
 
 diff --git a/Documentation/devicetree/bindings/display/bridge/cdns,mhdp8501.yaml b/Documentation/devicetree/bindings/display/bridge/cdns,mhdp8501.yaml
 new file mode 100644
-index 0000000000000..e4b900ecf1ac9
+index 0000000000000..24abd8447a28c
 --- /dev/null
 +++ b/Documentation/devicetree/bindings/display/bridge/cdns,mhdp8501.yaml
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,120 @@
 +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
 +%YAML 1.2
 +---
@@ -2392,12 +2582,6 @@ index 0000000000000..e4b900ecf1ac9
 +      - const: plug_in
 +      - const: plug_out
 +
-+  data-lanes:
-+    $ref: /schemas/media/video-interfaces.yaml#/properties/data-lanes
-+    minItems: 4
-+    maxItems: 4
-+    description: Lane reordering for HDMI or DisplayPort interface.
-+
 +  ports:
 +    $ref: /schemas/graph.yaml#/properties/ports
 +
@@ -2406,11 +2590,26 @@ index 0000000000000..e4b900ecf1ac9
 +        $ref: /schemas/graph.yaml#/properties/port
 +        description:
 +          Input port from display controller output.
++
 +      port@1:
-+        $ref: /schemas/graph.yaml#/properties/port
++        $ref: /schemas/graph.yaml#/$defs/port-base
++        unevaluatedProperties: false
 +        description:
 +          Output port to DisplayPort or HDMI connector.
 +
++        properties:
++          endpoint:
++            $ref: /schemas/media/video-interfaces.yaml#
++            unevaluatedProperties: false
++
++            properties:
++              data-lanes:
++                $ref: /schemas/media/video-interfaces.yaml#/properties/data-lanes
++                minItems: 4
++                maxItems: 4
++                description: Lane reordering for HDMI or DisplayPort interface.
++            required:
++              - data-lanes
 +    required:
 +      - port@0
 +      - port@1
@@ -2422,7 +2621,6 @@ index 0000000000000..e4b900ecf1ac9
 +  - interrupts
 +  - interrupt-names
 +  - phys
-+  - data-lanes
 +  - ports
 +
 +additionalProperties: false
@@ -2440,7 +2638,6 @@ index 0000000000000..e4b900ecf1ac9
 +        interrupt-names = "plug_in", "plug_out";
 +        clocks = <&clk IMX8MQ_CLK_DISP_APB_ROOT>;
 +        phys = <&mdhp_phy>;
-+        data-lanes = <1 2 3 4>;
 +
 +        ports {
 +            #address-cells = <1>;
@@ -2459,20 +2656,21 @@ index 0000000000000..e4b900ecf1ac9
 +
 +                mhdp_out: endpoint {
 +                    remote-endpoint = <&dp_connector>;
++                    data-lanes = <2 1 0 3>;
 +                };
 +            };
 +        };
 +    };
 
-From patchwork Tue Oct 29 06:02:12 2024
+From patchwork Tue Nov 26 14:11:49 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,4/8] drm: bridge: Cadence: Add MHDP8501 DP/HDMI driver
+Subject: [v19,4/8] drm: bridge: Cadence: Add MHDP8501 DP/HDMI driver
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622016
+X-Patchwork-Id: 626192
 Message-Id: 
- <cfe452d28a9d1465c08b8b25d6232d25a8b216a0.1730172244.git.Sandor.yu@nxp.com>
+ <e32c909ea8744fc5ea89aa3b4eed501efbaad1c3.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -2484,7 +2682,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:12 +0800
+Date: Tue, 26 Nov 2024 22:11:49 +0800
 
 Add a new DRM DisplayPort and HDMI bridge driver for Candence MHDP8501
 used in i.MX8MQ SOC. MHDP8501 could support HDMI or DisplayPort
@@ -2499,6 +2697,12 @@ then load the corresponding driver.
 
 Signed-off-by: Sandor Yu <Sandor.yu@nxp.com>
 ---
+v18->v19:
+- Get endpoint for data-lanes as it had move to endpoint of port@1
+- Update clock management as devm_clk_get_enabled() introduced.
+- Fix clear_infoframe() function is not work issue.
+- Manage PHY power state via phy_power_on() and phy_power_off().
+
 v17->v18:
 - MHDP8501 HDMI and DP commands that need access mailbox are rewrited
   with new API functions created in patch #1.
@@ -2518,21 +2722,21 @@ v17->v18:
 
  drivers/gpu/drm/bridge/cadence/Kconfig        |  16 +
  drivers/gpu/drm/bridge/cadence/Makefile       |   2 +
- .../drm/bridge/cadence/cdns-mhdp8501-core.c   | 329 ++++++++
+ .../drm/bridge/cadence/cdns-mhdp8501-core.c   | 322 ++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-core.h   | 376 +++++++++
- .../gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c | 683 ++++++++++++++++
+ .../gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c | 686 ++++++++++++++++
  .../drm/bridge/cadence/cdns-mhdp8501-hdmi.c   | 764 ++++++++++++++++++
- 6 files changed, 2170 insertions(+)
+ 6 files changed, 2166 insertions(+)
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.h
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c
  create mode 100644 drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 
 diff --git a/drivers/gpu/drm/bridge/cadence/Kconfig b/drivers/gpu/drm/bridge/cadence/Kconfig
-index e0973339e9e33..45848e741f5f4 100644
+index 1b315593a6d73..dc7a0466bb020 100644
 --- a/drivers/gpu/drm/bridge/cadence/Kconfig
 +++ b/drivers/gpu/drm/bridge/cadence/Kconfig
-@@ -51,3 +51,19 @@ config DRM_CDNS_MHDP8546_J721E
+@@ -55,3 +55,19 @@ config DRM_CDNS_MHDP8546_J721E
  	  initializes the J721E Display Port and sets up the
  	  clock and data muxes.
  endif
@@ -2564,10 +2768,10 @@ index 087dc074820d7..02c1a9f3cf6fc 100644
 +cdns-mhdp8501-y := cdns-mhdp8501-core.o cdns-mhdp8501-dp.o cdns-mhdp8501-hdmi.o
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
 new file mode 100644
-index 0000000000000..b00977984647f
+index 0000000000000..c51696b586dd0
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-core.c
-@@ -0,0 +1,329 @@
+@@ -0,0 +1,322 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence Display Port Interface (DP) driver
@@ -2665,7 +2869,7 @@ index 0000000000000..b00977984647f
 +{
 +	struct device *dev = &pdev->dev;
 +	struct device_node *np = dev->of_node;
-+	struct device_node *remote;
++	struct device_node *remote, *endpoint;
 +	u32 data_lanes[DATA_LANES_COUNT];
 +	u32 lane_value;
 +	int ret, i;
@@ -2692,23 +2896,25 @@ index 0000000000000..b00977984647f
 +
 +	of_node_put(remote);
 +
++	endpoint = of_graph_get_endpoint_by_regs(np, 1, -1);
++
 +	/* Get the data lanes ordering */
-+	ret = of_property_count_u32_elems(np, "data-lanes");
++	ret = of_property_count_u32_elems(endpoint, "data-lanes");
 +	if (ret < 0)
 +		return  -EINVAL;
-+
 +	if (ret != DATA_LANES_COUNT) {
 +		dev_err(dev, "expected 4 data lanes\n");
 +		return  -EINVAL;
 +	}
 +
-+	ret = of_property_read_u32_array(np, "data-lanes", data_lanes, DATA_LANES_COUNT);
++	ret = of_property_read_u32_array(endpoint, "data-lanes",
++					 data_lanes, DATA_LANES_COUNT);
 +	if (ret)
 +		return  -EINVAL;
 +
 +	mhdp->lane_mapping  = 0;
 +	for (i = 0; i < DATA_LANES_COUNT; i++) {
-+		lane_value = (data_lanes[i] >= 1 && data_lanes[i] <= 4) ? data_lanes[i] - 1 : 0;
++		lane_value = (data_lanes[i] >= 0 && data_lanes[i] <= 3) ? data_lanes[i] : 0;
 +		mhdp->lane_mapping |= lane_value << (i * 2);
 +	}
 +
@@ -2820,13 +3026,10 @@ index 0000000000000..b00977984647f
 +	}
 +
 +	/* Enable APB clock */
-+	mhdp->apb_clk = devm_clk_get(dev, NULL);
++	mhdp->apb_clk = devm_clk_get_enabled(dev, NULL);
 +	if (IS_ERR(mhdp->apb_clk))
 +		return dev_err_probe(dev, PTR_ERR(mhdp->apb_clk),
 +				     "couldn't get apb clk\n");
-+
-+	clk_prepare_enable(mhdp->apb_clk);
-+
 +	/*
 +	 * Wait for the KEEP_ALIVE "message" on the first 8 bits.
 +	 * Updated each sched "tick" (~2ms)
@@ -2836,19 +3039,19 @@ index 0000000000000..b00977984647f
 +				 CDNS_KEEP_ALIVE_TIMEOUT);
 +	if (ret) {
 +		dev_err(dev, "device didn't give any life sign: reg %d\n", reg);
-+		goto clk_disable;
++		return ret;
 +	}
 +
 +	ret = phy_init(mhdp->phy);
 +	if (ret) {
 +		dev_err(dev, "Failed to initialize PHY: %d\n", ret);
-+		goto clk_disable;
++		return ret;
 +	}
 +
 +	ret = phy_set_mode(mhdp->phy, phy_mode);
 +	if (ret) {
 +		dev_err(dev, "Failed to configure PHY: %d\n", ret);
-+		goto clk_disable;
++		return ret;
 +	}
 +
 +	/* Enable cable hotplug detect */
@@ -2858,11 +3061,6 @@ index 0000000000000..b00977984647f
 +		enable_irq(mhdp->irq[IRQ_IN]);
 +
 +	return cdns_mhdp8501_add_bridge(mhdp);
-+
-+clk_disable:
-+	clk_disable_unprepare(mhdp->apb_clk);
-+
-+	return -EINVAL;
 +}
 +
 +static void cdns_mhdp8501_remove(struct platform_device *pdev)
@@ -2873,7 +3071,6 @@ index 0000000000000..b00977984647f
 +		cdns_dp_aux_destroy(mhdp);
 +
 +	drm_bridge_remove(&mhdp->bridge);
-+	clk_disable_unprepare(mhdp->apb_clk);
 +}
 +
 +static const struct of_device_id cdns_mhdp8501_dt_ids[] = {
@@ -3281,10 +3478,10 @@ index 0000000000000..a8b7e54f629e2
 +#endif
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c
 new file mode 100644
-index 0000000000000..93445b0badfcb
+index 0000000000000..392bb65f6c9c1
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-dp.c
-@@ -0,0 +1,683 @@
+@@ -0,0 +1,686 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence MHDP8501 DisplayPort(DP) bridge driver
@@ -3745,7 +3942,7 @@ index 0000000000000..93445b0badfcb
 +	phy_cfg.dp.link_rate = mhdp->dp.rate;
 +	phy_cfg.dp.set_lanes = false;
 +	phy_cfg.dp.set_rate = false;
-+	phy_cfg.dp.set_voltages = true;
++	phy_cfg.dp.set_voltages = false;
 +
 +	ret = phy_configure(mhdp->phy, &phy_cfg);
 +	if (ret) {
@@ -3943,7 +4140,10 @@ index 0000000000000..93445b0badfcb
 +
 +	cdns_dp_mode_set(mhdp, &crtc_state->adjusted_mode);
 +
-+	/* Link trainning */
++	/* Power up PHY before link training */
++	phy_power_on(mhdp->phy);
++
++	/* Link training */
 +	ret = cdns_dp_train_link(mhdp);
 +	if (ret) {
 +		dev_err(mhdp->dev, "Failed link train %d\n", ret);
@@ -3970,7 +4170,7 @@ index 0000000000000..93445b0badfcb
 +};
 diff --git a/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 new file mode 100644
-index 0000000000000..34c4935700aea
+index 0000000000000..f7cafc153a58e
 --- /dev/null
 +++ b/drivers/gpu/drm/bridge/cadence/cdns-mhdp8501-hdmi.c
 @@ -0,0 +1,764 @@
@@ -4001,6 +4201,19 @@ index 0000000000000..34c4935700aea
 + * @type: Packet Type of InfoFrame in HDMI Specification.
 + *
 + */
++
++static void cdns_hdmi_clear_infoframe(struct cdns_mhdp8501_device *mhdp,
++				      u8 entry_id, u8 type)
++{
++	u32 val;
++
++	/* invalidate entry */
++	val = F_ACTIVE_IDLE_TYPE(1) | F_PKT_ALLOC_ADDRESS(entry_id) |
++	      F_PACKET_TYPE(type);
++	writel(val, mhdp->regs + SOURCE_PIF_PKT_ALLOC_REG);
++	writel(F_PKT_ALLOC_WR_EN(1), mhdp->regs + SOURCE_PIF_PKT_ALLOC_WR_EN);
++}
++
 +static void cdns_hdmi_config_infoframe(struct cdns_mhdp8501_device *mhdp,
 +				       u8 entry_id, u8 len,
 +				       const u8 *buf, u8 type)
@@ -4020,10 +4233,7 @@ index 0000000000000..34c4935700aea
 +	packet[0] = 0;
 +	memcpy(packet + 1, buf, len);
 +
-+	/* invalidate entry */
-+	val = F_ACTIVE_IDLE_TYPE(1) | F_PKT_ALLOC_ADDRESS(entry_id);
-+	writel(val, mhdp->regs + SOURCE_PIF_PKT_ALLOC_REG);
-+	writel(F_PKT_ALLOC_WR_EN(1), mhdp->regs + SOURCE_PIF_PKT_ALLOC_WR_EN);
++	cdns_hdmi_clear_infoframe(mhdp, entry_id, type);
 +
 +	/* flush fifo 1 */
 +	writel(F_FIFO1_FLUSH(1), mhdp->regs + SOURCE_PIF_FIFO1_FLUSH);
@@ -4043,19 +4253,9 @@ index 0000000000000..34c4935700aea
 +
 +	/* update entry */
 +	val = F_ACTIVE_IDLE_TYPE(1) | F_TYPE_VALID(1) |
-+		F_PACKET_TYPE(type) | F_PKT_ALLOC_ADDRESS(entry_id);
++	      F_PACKET_TYPE(type) | F_PKT_ALLOC_ADDRESS(entry_id);
 +	writel(val, mhdp->regs + SOURCE_PIF_PKT_ALLOC_REG);
 +
-+	writel(F_PKT_ALLOC_WR_EN(1), mhdp->regs + SOURCE_PIF_PKT_ALLOC_WR_EN);
-+}
-+
-+static void cdns_hdmi_reset_infoframe(struct cdns_mhdp8501_device *mhdp, u8 entry_id)
-+{
-+	u32 val;
-+
-+	/* invalidate entry */
-+	val = F_ACTIVE_IDLE_TYPE(1) | F_PKT_ALLOC_ADDRESS(entry_id);
-+	writel(val, mhdp->regs + SOURCE_PIF_PKT_ALLOC_REG);
 +	writel(F_PKT_ALLOC_WR_EN(1), mhdp->regs + SOURCE_PIF_PKT_ALLOC_WR_EN);
 +}
 +
@@ -4647,6 +4847,8 @@ index 0000000000000..34c4935700aea
 +		return;
 +	}
 +
++	phy_power_on(mhdp->phy);
++
 +	cdns_hdmi_sink_config(mhdp, hdmi->tmds_char_rate);
 +
 +	ret = cdns_hdmi_ctrl_init(mhdp);
@@ -4666,8 +4868,6 @@ index 0000000000000..34c4935700aea
 +		dev_err(mhdp->dev, "CDN_API_HDMITX_SetVic_blocking ret = %d\n", ret);
 +		return;
 +	}
-+
-+	phy_power_on(mhdp->phy);
 +}
 +
 +static int cdns_hdmi_bridge_clear_infoframe(struct drm_bridge *bridge,
@@ -4677,13 +4877,13 @@ index 0000000000000..34c4935700aea
 +
 +	switch (type) {
 +	case HDMI_INFOFRAME_TYPE_AVI:
-+		cdns_hdmi_reset_infoframe(mhdp, 0);
++		cdns_hdmi_clear_infoframe(mhdp, 0, HDMI_INFOFRAME_TYPE_AVI);
 +		break;
 +	case HDMI_INFOFRAME_TYPE_SPD:
-+		cdns_hdmi_reset_infoframe(mhdp, 1);
++		cdns_hdmi_clear_infoframe(mhdp, 1, HDMI_INFOFRAME_TYPE_SPD);
 +		break;
 +	case HDMI_INFOFRAME_TYPE_VENDOR:
-+		cdns_hdmi_reset_infoframe(mhdp, 2);
++		cdns_hdmi_clear_infoframe(mhdp, 2, HDMI_INFOFRAME_TYPE_VENDOR);
 +		break;
 +	default:
 +		dev_dbg(mhdp->dev, "Unsupported infoframe type %x\n", type);
@@ -4739,15 +4939,15 @@ index 0000000000000..34c4935700aea
 +	.hdmi_tmds_char_rate_valid = cdns_hdmi_tmds_char_rate_valid,
 +};
 
-From patchwork Tue Oct 29 06:02:13 2024
+From patchwork Tue Nov 26 14:11:50 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,5/8] dt-bindings: phy: Add Freescale iMX8MQ DP and HDMI PHY
+Subject: [v19,5/8] dt-bindings: phy: Add Freescale iMX8MQ DP and HDMI PHY
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622017
+X-Patchwork-Id: 626193
 Message-Id: 
- <ac00d2b923bf66122ad24059d6eab6039137ad63.1730172244.git.Sandor.yu@nxp.com>
+ <54ee86767e5b6c7320b9b2053e404e615c290287.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -4760,7 +4960,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org,
  Rob Herring <robh@kernel.org>
-Date: Tue, 29 Oct 2024 14:02:13 +0800
+Date: Tue, 26 Nov 2024 22:11:50 +0800
 
 Add bindings for Freescale iMX8MQ DP and HDMI PHY.
 
@@ -4832,16 +5032,16 @@ index 0000000000000..c17a645e71bad
 +        clock-names = "ref", "apb";
 +    };
 
-From patchwork Tue Oct 29 06:02:14 2024
+From patchwork Tue Nov 26 14:11:51 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,6/8] phy: freescale: Add DisplayPort/HDMI Combo-PHY driver for
+Subject: [v19,6/8] phy: freescale: Add DisplayPort/HDMI Combo-PHY driver for
  i.MX8MQ
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622018
+X-Patchwork-Id: 626194
 Message-Id: 
- <411e42c70e71dce33a80059f663fb6c58fb2ac8c.1730172244.git.Sandor.yu@nxp.com>
+ <4ef8252825d7a962b440519fb17fdcd5dd817672.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -4853,7 +5053,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:14 +0800
+Date: Tue, 26 Nov 2024 22:11:51 +0800
 
 Add Cadence HDP-TX DisplayPort and HDMI PHY driver for i.MX8MQ.
 
@@ -4864,17 +5064,25 @@ DisplayPort or HDMI PHY mode is configured in the driver.
 Signed-off-by: Sandor Yu <Sandor.yu@nxp.com>
 Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 ---
+v18->v19:
+- Simplify the PLL tables by removing unused and constant data
+- Remove PHY power management, controller driver will handle them.
+- Remove enum dp_link_rate
+- Introduce read_pll_timeout.
+- Update clock management as devm_clk_get_enabled() introduced.
+- Remove cdns_hdptx_phy_init() and cdns_hdptx_phy_remove().
+
 v17->v18:
 - fix build error as code rebase to latest kernel version.
 
  drivers/phy/freescale/Kconfig                |   10 +
  drivers/phy/freescale/Makefile               |    1 +
- drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c | 1337 ++++++++++++++++++
- 3 files changed, 1348 insertions(+)
+ drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c | 1237 ++++++++++++++++++
+ 3 files changed, 1248 insertions(+)
  create mode 100644 drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c
 
 diff --git a/drivers/phy/freescale/Kconfig b/drivers/phy/freescale/Kconfig
-index dcd9acff6d01a..2b1210367b31c 100644
+index dcd9acff6d01a..bbd17e9556cc3 100644
 --- a/drivers/phy/freescale/Kconfig
 +++ b/drivers/phy/freescale/Kconfig
 @@ -35,6 +35,16 @@ config PHY_FSL_IMX8M_PCIE
@@ -4885,8 +5093,8 @@ index dcd9acff6d01a..2b1210367b31c 100644
 +	tristate "Freescale i.MX8MQ DP/HDMI PHY support"
 +	depends on OF && HAS_IOMEM
 +	depends on COMMON_CLK
++	depends on CDNS_MHDP_HELPER
 +	select GENERIC_PHY
-+	select CDNS_MHDP_HELPER
 +	help
 +	  Enable this to support the Cadence HDPTX DP/HDMI PHY driver
 +	  on i.MX8MQ SOC.
@@ -4906,10 +5114,10 @@ index 658eac7d0a622..a946b87905498 100644
  obj-$(CONFIG_PHY_MIXEL_MIPI_DPHY)	+= phy-fsl-imx8-mipi-dphy.o
 diff --git a/drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c b/drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c
 new file mode 100644
-index 0000000000000..7aac39df0ab02
+index 0000000000000..e99487622d43c
 --- /dev/null
 +++ b/drivers/phy/freescale/phy-fsl-imx8mq-hdptx.c
-@@ -0,0 +1,1337 @@
+@@ -0,0 +1,1237 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Cadence DP/HDMI PHY driver
@@ -5096,34 +5304,33 @@ index 0000000000000..7aac39df0ab02
 +
 +#define KEEP_ALIVE		0x18
 +
++/* FW check alive timeout */
++#define CDNS_KEEP_ALIVE_TIMEOUT		2000
++#define CDNS_KEEP_ALIVE_MASK		GENMASK(7, 0)
++
 +#define REF_CLK_27MHZ		27000000
++
++#define LINK_RATE_2_7	270000
++#define MAX_LINK_RATE	540000
++
++#define CMN_REF_CLK_DIG_DIV	1
++#define REF_CLK_DIVIDER_SCALER	1
 +
 +/* HDMI TX clock control settings */
 +struct hdptx_hdmi_ctrl {
-+	u32 pixel_clk_freq_min;
-+	u32 pixel_clk_freq_max;
++	u32 pixel_clk_freq;
 +	u32 feedback_factor;
-+	u32 data_range_kbps_min;
-+	u32 data_range_kbps_max;
 +	u32 cmnda_pll0_ip_div;
-+	u32 cmn_ref_clk_dig_div;
-+	u32 ref_clk_divider_scaler;
 +	u32 pll_fb_div_total;
 +	u32 cmnda_pll0_fb_div_low;
 +	u32 cmnda_pll0_fb_div_high;
-+	u32 pixel_div_total;
 +	u32 cmnda_pll0_pxdiv_low;
 +	u32 cmnda_pll0_pxdiv_high;
-+	u32 vco_freq_min;
-+	u32 vco_freq_max;
 +	u32 vco_ring_select;
 +	u32 cmnda_hs_clk_0_sel;
 +	u32 cmnda_hs_clk_1_sel;
-+	u32 hsclk_div_at_xcvr;
 +	u32 hsclk_div_tx_sub_rate;
 +	u32 cmnda_pll0_hs_sym_div_sel;
-+	u32 cmnda_pll0_clk_freq_min;
-+	u32 cmnda_pll0_clk_freq_max;
 +};
 +
 +struct cdns_hdptx_phy {
@@ -5134,7 +5341,6 @@ index 0000000000000..7aac39df0ab02
 +	struct phy *phy;
 +	struct clk *ref_clk, *apb_clk;
 +	u32 ref_clk_rate;
-+	bool power_up;
 +	union {
 +		struct phy_configure_opts_hdmi hdmi;
 +		struct phy_configure_opts_dp dp;
@@ -5143,45 +5349,43 @@ index 0000000000000..7aac39df0ab02
 +
 +/* HDMI TX clock control settings, pixel clock is output */
 +static const struct hdptx_hdmi_ctrl pixel_clk_output_ctrl_table[] = {
-+/*Minclk  Maxclk Fdbak  DR_min   DR_max  ip_d  dig  DS    Totl */
-+{ 27000,  27000, 1000,  270000,  270000, 0x03, 0x1, 0x1,  240, 0x0bc, 0x030,  80, 0x026, 0x026, 2160000, 2160000, 0, 2, 2, 2, 4, 0x3,  27000,  27000},
-+{ 27000,  27000, 1250,  337500,  337500, 0x03, 0x1, 0x1,  300, 0x0ec, 0x03c, 100, 0x030, 0x030, 2700000, 2700000, 0, 2, 2, 2, 4, 0x3,  33750,  33750},
-+{ 27000,  27000, 1500,  405000,  405000, 0x03, 0x1, 0x1,  360, 0x11c, 0x048, 120, 0x03a, 0x03a, 3240000, 3240000, 0, 2, 2, 2, 4, 0x3,  40500,  40500},
-+{ 27000,  27000, 2000,  540000,  540000, 0x03, 0x1, 0x1,  240, 0x0bc, 0x030,  80, 0x026, 0x026, 2160000, 2160000, 0, 2, 2, 2, 4, 0x2,  54000,  54000},
-+{ 54000,  54000, 1000,  540000,  540000, 0x03, 0x1, 0x1,  480, 0x17c, 0x060,  80, 0x026, 0x026, 4320000, 4320000, 1, 2, 2, 2, 4, 0x3,  54000,  54000},
-+{ 54000,  54000, 1250,  675000,  675000, 0x04, 0x1, 0x1,  400, 0x13c, 0x050,  50, 0x017, 0x017, 2700000, 2700000, 0, 1, 1, 2, 4, 0x2,  67500,  67500},
-+{ 54000,  54000, 1500,  810000,  810000, 0x04, 0x1, 0x1,  480, 0x17c, 0x060,  60, 0x01c, 0x01c, 3240000, 3240000, 0, 2, 2, 2, 2, 0x2,  81000,  81000},
-+{ 54000,  54000, 2000, 1080000, 1080000, 0x03, 0x1, 0x1,  240, 0x0bc, 0x030,  40, 0x012, 0x012, 2160000, 2160000, 0, 2, 2, 2, 1, 0x1, 108000, 108000},
-+{ 74250,  74250, 1000,  742500,  742500, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  80, 0x026, 0x026, 5940000, 5940000, 1, 2, 2, 2, 4, 0x3,  74250,  74250},
-+{ 74250,  74250, 1250,  928125,  928125, 0x04, 0x1, 0x1,  550, 0x1b4, 0x06e,  50, 0x017, 0x017, 3712500, 3712500, 1, 1, 1, 2, 4, 0x2,  92812,  92812},
-+{ 74250,  74250, 1500, 1113750, 1113750, 0x04, 0x1, 0x1,  660, 0x20c, 0x084,  60, 0x01c, 0x01c, 4455000, 4455000, 1, 2, 2, 2, 2, 0x2, 111375, 111375},
-+{ 74250,  74250, 2000, 1485000, 1485000, 0x03, 0x1, 0x1,  330, 0x104, 0x042,  40, 0x012, 0x012, 2970000, 2970000, 0, 2, 2, 2, 1, 0x1, 148500, 148500},
-+{ 99000,  99000, 1000,  990000,  990000, 0x03, 0x1, 0x1,  440, 0x15c, 0x058,  40, 0x012, 0x012, 3960000, 3960000, 1, 2, 2, 2, 2, 0x2,  99000,  99000},
-+{ 99000,  99000, 1250, 1237500, 1237500, 0x03, 0x1, 0x1,  275, 0x0d8, 0x037,  25, 0x00b, 0x00a, 2475000, 2475000, 0, 1, 1, 2, 2, 0x1, 123750, 123750},
-+{ 99000,  99000, 1500, 1485000, 1485000, 0x03, 0x1, 0x1,  330, 0x104, 0x042,  30, 0x00d, 0x00d, 2970000, 2970000, 0, 2, 2, 2, 1, 0x1, 148500, 148500},
-+{ 99000,  99000, 2000, 1980000, 1980000, 0x03, 0x1, 0x1,  440, 0x15c, 0x058,  40, 0x012, 0x012, 3960000, 3960000, 1, 2, 2, 2, 1, 0x1, 198000, 198000},
-+{148500, 148500, 1000, 1485000, 1485000, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  40, 0x012, 0x012, 5940000, 5940000, 1, 2, 2, 2, 2, 0x2, 148500, 148500},
-+{148500, 148500, 1250, 1856250, 1856250, 0x04, 0x1, 0x1,  550, 0x1b4, 0x06e,  25, 0x00b, 0x00a, 3712500, 3712500, 1, 1, 1, 2, 2, 0x1, 185625, 185625},
-+{148500, 148500, 1500, 2227500, 2227500, 0x03, 0x1, 0x1,  495, 0x188, 0x063,  30, 0x00d, 0x00d, 4455000, 4455000, 1, 1, 1, 2, 2, 0x1, 222750, 222750},
-+{148500, 148500, 2000, 2970000, 2970000, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  40, 0x012, 0x012, 5940000, 5940000, 1, 2, 2, 2, 1, 0x1, 297000, 297000},
-+{198000, 198000, 1000, 1980000, 1980000, 0x03, 0x1, 0x1,  220, 0x0ac, 0x02c,  10, 0x003, 0x003, 1980000, 1980000, 0, 1, 1, 2, 1, 0x0, 198000, 198000},
-+{198000, 198000, 1250, 2475000, 2475000, 0x03, 0x1, 0x1,  550, 0x1b4, 0x06e,  25, 0x00b, 0x00a, 4950000, 4950000, 1, 1, 1, 2, 2, 0x1, 247500, 247500},
-+{198000, 198000, 1500, 2970000, 2970000, 0x03, 0x1, 0x1,  330, 0x104, 0x042,  15, 0x006, 0x005, 2970000, 2970000, 0, 1, 1, 2, 1, 0x0, 297000, 297000},
-+{198000, 198000, 2000, 3960000, 3960000, 0x03, 0x1, 0x1,  440, 0x15c, 0x058,  20, 0x008, 0x008, 3960000, 3960000, 1, 1, 1, 2, 1, 0x0, 396000, 396000},
-+{297000, 297000, 1000, 2970000, 2970000, 0x03, 0x1, 0x1,  330, 0x104, 0x042,  10, 0x003, 0x003, 2970000, 2970000, 0, 1, 1, 2, 1, 0x0, 297000, 297000},
-+{297000, 297000, 1500, 4455000, 4455000, 0x03, 0x1, 0x1,  495, 0x188, 0x063,  15, 0x006, 0x005, 4455000, 4455000, 1, 1, 1, 2, 1, 0x0, 445500, 445500},
-+{297000, 297000, 2000, 5940000, 5940000, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  20, 0x008, 0x008, 5940000, 5940000, 1, 1, 1, 2, 1, 0x0, 594000, 594000},
-+{594000, 594000, 1000, 5940000, 5940000, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  10, 0x003, 0x003, 5940000, 5940000, 1, 1, 1, 2, 1, 0x0, 594000, 594000},
-+{594000, 594000,  750, 4455000, 4455000, 0x03, 0x1, 0x1,  495, 0x188, 0x063,  10, 0x003, 0x003, 4455000, 4455000, 1, 1, 1, 2, 1, 0x0, 445500, 445500},
-+{594000, 594000,  625, 3712500, 3712500, 0x04, 0x1, 0x1,  550, 0x1b4, 0x06e,  10, 0x003, 0x003, 3712500, 3712500, 1, 1, 1, 2, 1, 0x0, 371250, 371250},
-+{594000, 594000,  500, 2970000, 2970000, 0x03, 0x1, 0x1,  660, 0x20c, 0x084,  10, 0x003, 0x003, 5940000, 5940000, 1, 1, 1, 2, 2, 0x1, 297000, 297000},
++	/*  clk   fbak ipd totl div_l  div_h pd_l  pd_h  v h1 h2 sub sym*/
++	{  27000, 1000, 3, 240, 0x0bc, 0x30, 0x26, 0x26, 0, 2, 2, 4, 3 },
++	{  27000, 1250, 3, 300, 0x0ec, 0x3c, 0x30, 0x30, 0, 2, 2, 4, 3 },
++	{  27000, 1500, 3, 360, 0x11c, 0x48, 0x3a, 0x3a, 0, 2, 2, 4, 3 },
++	{  27000, 2000, 3, 240, 0x0bc, 0x30, 0x26, 0x26, 0, 2, 2, 4, 2 },
++	{  54000, 1000, 3, 480, 0x17c, 0x60, 0x26, 0x26, 1, 2, 2, 4, 3 },
++	{  54000, 1250, 4, 400, 0x13c, 0x50, 0x17, 0x17, 0, 1, 1, 4, 2 },
++	{  54000, 1500, 4, 480, 0x17c, 0x60, 0x1c, 0x1c, 0, 2, 2, 2, 2 },
++	{  54000, 2000, 3, 240, 0x0bc, 0x30, 0x12, 0x12, 0, 2, 2, 1, 1 },
++	{  74250, 1000, 3, 660, 0x20c, 0x84, 0x26, 0x26, 1, 2, 2, 4, 3 },
++	{  74250, 1250, 4, 550, 0x1b4, 0x6e, 0x17, 0x17, 1, 1, 1, 4, 2 },
++	{  74250, 1500, 4, 660, 0x20c, 0x84, 0x1c, 0x1c, 1, 2, 2, 2, 2 },
++	{  74250, 2000, 3, 330, 0x104, 0x42, 0x12, 0x12, 0, 2, 2, 1, 1 },
++	{  99000, 1000, 3, 440, 0x15c, 0x58, 0x12, 0x12, 1, 2, 2, 2, 2 },
++	{  99000, 1250, 3, 275, 0x0d8, 0x37, 0x0b, 0x0a, 0, 1, 1, 2, 1 },
++	{  99000, 1500, 3, 330, 0x104, 0x42, 0x0d, 0x0d, 0, 2, 2, 1, 1 },
++	{  99000, 2000, 3, 440, 0x15c, 0x58, 0x12, 0x12, 1, 2, 2, 1, 1 },
++	{ 148500, 1000, 3, 660, 0x20c, 0x84, 0x12, 0x12, 1, 2, 2, 2, 2 },
++	{ 148500, 1250, 4, 550, 0x1b4, 0x6e, 0x0b, 0x0a, 1, 1, 1, 2, 1 },
++	{ 148500, 1500, 3, 495, 0x188, 0x63, 0x0d, 0x0d, 1, 1, 1, 2, 1 },
++	{ 148500, 2000, 3, 660, 0x20c, 0x84, 0x12, 0x12, 1, 2, 2, 1, 1 },
++	{ 198000, 1000, 3, 220, 0x0ac, 0x2c, 0x03, 0x03, 0, 1, 1, 1, 0 },
++	{ 198000, 1250, 3, 550, 0x1b4, 0x6e, 0x0b, 0x0a, 1, 1, 1, 2, 1 },
++	{ 198000, 1500, 3, 330, 0x104, 0x42, 0x06, 0x05, 0, 1, 1, 1, 0 },
++	{ 198000, 2000, 3, 440, 0x15c, 0x58, 0x08, 0x08, 1, 1, 1, 1, 0 },
++	{ 297000, 1000, 3, 330, 0x104, 0x42, 0x03, 0x03, 0, 1, 1, 1, 0 },
++	{ 297000, 1500, 3, 495, 0x188, 0x63, 0x06, 0x05, 1, 1, 1, 1, 0 },
++	{ 297000, 2000, 3, 660, 0x20c, 0x84, 0x08, 0x08, 1, 1, 1, 1, 0 },
++	{ 594000, 1000, 3, 660, 0x20c, 0x84, 0x03, 0x03, 1, 1, 1, 1, 0 },
++	{ 594000,  750, 3, 495, 0x188, 0x63, 0x03, 0x03, 1, 1, 1, 1, 0 },
++	{ 594000,  625, 4, 550, 0x1b4, 0x6e, 0x03, 0x03, 1, 1, 1, 1, 0 },
++	{ 594000,  500, 3, 660, 0x20c, 0x84, 0x03, 0x03, 1, 1, 1, 2, 1 },
 +};
 +
 +/* HDMI TX PLL tuning settings */
 +struct hdptx_hdmi_pll_tuning {
-+	u32 vco_freq_bin;
-+	u32 vco_freq_min;
-+	u32 vco_freq_max;
++	u32 vco_freq;
 +	u32 volt_to_current_coarse;
 +	u32 volt_to_current;
 +	u32 ndac_ctrl;
@@ -5189,42 +5393,28 @@ index 0000000000000..7aac39df0ab02
 +	u32 ptat_ndac_ctrl;
 +	u32 feedback_div_total;
 +	u32 charge_pump_gain;
-+	u32 coarse_code;
-+	u32 v2i_code;
 +	u32 vco_cal_code;
 +};
 +
 +/* HDMI TX PLL tuning settings, pixel clock is output */
 +static const struct hdptx_hdmi_pll_tuning pixel_clk_output_pll_table[] = {
-+/*bin VCO_freq min/max  coar  cod NDAC  PMOS PTAT div-T P-Gain Coa V2I CAL */
-+{  1, 1980000, 1980000, 0x4, 0x3, 0x0, 0x09, 0x09, 220, 0x42, 160, 5, 183 },
-+{  2, 2160000, 2160000, 0x4, 0x3, 0x0, 0x09, 0x09, 240, 0x42, 166, 6, 208 },
-+{  3, 2475000, 2475000, 0x5, 0x3, 0x1, 0x00, 0x07, 275, 0x42, 167, 6, 209 },
-+{  4, 2700000, 2700000, 0x5, 0x3, 0x1, 0x00, 0x07, 300, 0x42, 188, 6, 230 },
-+{  4, 2700000, 2700000, 0x5, 0x3, 0x1, 0x00, 0x07, 400, 0x4c, 188, 6, 230 },
-+{  5, 2970000, 2970000, 0x6, 0x3, 0x1, 0x00, 0x07, 330, 0x42, 183, 6, 225 },
-+{  6, 3240000, 3240000, 0x6, 0x3, 0x1, 0x00, 0x07, 360, 0x42, 203, 7, 256 },
-+{  6, 3240000, 3240000, 0x6, 0x3, 0x1, 0x00, 0x07, 480, 0x4c, 203, 7, 256 },
-+{  7, 3712500, 3712500, 0x4, 0x3, 0x0, 0x07, 0x0F, 550, 0x4c, 212, 7, 257 },
-+{  8, 3960000, 3960000, 0x5, 0x3, 0x0, 0x07, 0x0F, 440, 0x42, 184, 6, 226 },
-+{  9, 4320000, 4320000, 0x5, 0x3, 0x1, 0x07, 0x0F, 480, 0x42, 205, 7, 258 },
-+{ 10, 4455000, 4455000, 0x5, 0x3, 0x0, 0x07, 0x0F, 495, 0x42, 219, 7, 272 },
-+{ 10, 4455000, 4455000, 0x5, 0x3, 0x0, 0x07, 0x0F, 660, 0x4c, 219, 7, 272 },
-+{ 11, 4950000, 4950000, 0x6, 0x3, 0x1, 0x00, 0x07, 550, 0x42, 213, 7, 258 },
-+{ 12, 5940000, 5940000, 0x7, 0x3, 0x1, 0x00, 0x07, 660, 0x42, 244, 8, 292 },
++	/*VCO_f  coar cu nd pm ptat fd_d gain  cal */
++	{ 1980000, 4, 3, 0, 9, 0x9, 220, 0x42, 183 },
++	{ 2160000, 4, 3, 0, 9, 0x9, 240, 0x42, 208 },
++	{ 2475000, 5, 3, 1, 0, 0x7, 275, 0x42, 209 },
++	{ 2700000, 5, 3, 1, 0, 0x7, 300, 0x42, 230 },
++	{ 2700000, 5, 3, 1, 0, 0x7, 400, 0x4c, 230 },
++	{ 2970000, 6, 3, 1, 0, 0x7, 330, 0x42, 225 },
++	{ 3240000, 6, 3, 1, 0, 0x7, 360, 0x42, 256 },
++	{ 3240000, 6, 3, 1, 0, 0x7, 480, 0x4c, 256 },
++	{ 3712500, 4, 3, 0, 7, 0xF, 550, 0x4c, 257 },
++	{ 3960000, 5, 3, 0, 7, 0xF, 440, 0x42, 226 },
++	{ 4320000, 5, 3, 1, 7, 0xF, 480, 0x42, 258 },
++	{ 4455000, 5, 3, 0, 7, 0xF, 495, 0x42, 272 },
++	{ 4455000, 5, 3, 0, 7, 0xF, 660, 0x4c, 272 },
++	{ 4950000, 6, 3, 1, 0, 0x7, 550, 0x42, 258 },
++	{ 5940000, 7, 3, 1, 0, 0x7, 660, 0x42, 292 },
 +};
-+
-+enum dp_link_rate {
-+	RATE_1_6 = 162000,
-+	RATE_2_1 = 216000,
-+	RATE_2_4 = 243000,
-+	RATE_2_7 = 270000,
-+	RATE_3_2 = 324000,
-+	RATE_4_3 = 432000,
-+	RATE_5_4 = 540000,
-+};
-+
-+#define MAX_LINK_RATE RATE_5_4
 +
 +struct phy_pll_reg {
 +	u16 val[7];
@@ -5256,21 +5446,22 @@ index 0000000000000..7aac39df0ab02
 +static int dp_link_rate_index(u32 rate)
 +{
 +	switch (rate) {
-+	case RATE_1_6:
++	case 162000:
 +		return 0;
-+	case RATE_2_1:
++	case 216000:
 +		return 1;
-+	case RATE_2_4:
++	case 243000:
 +		return 2;
-+	case RATE_2_7:
++	case 270000:
 +		return 3;
-+	case RATE_3_2:
++	case 324000:
 +		return 4;
-+	case RATE_4_3:
++	case 432000:
 +		return 5;
-+	case RATE_5_4:
-+	default:
++	case 540000:
 +		return 6;
++	default:
++		return -EINVAL;
 +	}
 +}
 +
@@ -5392,7 +5583,7 @@ index 0000000000000..7aac39df0ab02
 +	/* DP PLL data rate 0/1 clock divider value */
 +	val = cdns_phy_reg_read(cdns_phy, PHY_HDP_CLK_CTL);
 +	val &= ~PLL_DATA_RATE_CLK_DIV_MASK;
-+	if (link_rate <= RATE_2_7)
++	if (link_rate <= LINK_RATE_2_7)
 +		val |= FIELD_PREP(PLL_DATA_RATE_CLK_DIV_MASK,
 +				  PLL_DATA_RATE_CLK_DIV_HBR);
 +	else
@@ -5403,7 +5594,7 @@ index 0000000000000..7aac39df0ab02
 +	/* High speed clock 0/1 div */
 +	val = cdns_phy_reg_read(cdns_phy, CMN_DIAG_HSCLK_SEL);
 +	val &= ~(HSCLK1_SEL_MASK | HSCLK0_SEL_MASK);
-+	if (link_rate <= RATE_2_7) {
++	if (link_rate <= LINK_RATE_2_7) {
 +		val |= FIELD_PREP(HSCLK1_SEL_MASK, HSCLK_PLL0_DIV2);
 +		val |= FIELD_PREP(HSCLK0_SEL_MASK, HSCLK_PLL0_DIV2);
 +	}
@@ -5412,13 +5603,18 @@ index 0000000000000..7aac39df0ab02
 +	for (k = 0; k < num_lanes; k++) {
 +		val = cdns_phy_reg_read(cdns_phy, (XCVR_DIAG_HSCLK_SEL | (k << 9)));
 +		val &= ~HSCLK_SEL_MODE3_MASK;
-+		if (link_rate <= RATE_2_7)
++		if (link_rate <= LINK_RATE_2_7)
 +			val |= FIELD_PREP(HSCLK_SEL_MODE3_MASK, HSCLK_SEL_MODE3_HSCLK1);
 +		cdns_phy_reg_write(cdns_phy, (XCVR_DIAG_HSCLK_SEL | (k << 9)), val);
 +	}
 +
 +	/* DP PHY PLL 27MHz configuration */
 +	index = dp_link_rate_index(link_rate);
++	if (index < 0) {
++		dev_err(cdns_phy->dev, "Not support link rate %d\n", link_rate);
++		return;
++	}
++
 +	for (i = 0; i < ARRAY_SIZE(phy_pll_27m_cfg); i++)
 +		cdns_phy_reg_write(cdns_phy, phy_pll_27m_cfg[i].addr,
 +				   phy_pll_27m_cfg[i].val[index]);
@@ -5427,7 +5623,7 @@ index 0000000000000..7aac39df0ab02
 +	for (k = 0; k < num_lanes; k++) {
 +		val = cdns_phy_reg_read(cdns_phy, (XCVR_DIAG_PLLDRC_CTRL | (k << 9)));
 +		val &= ~(DPLL_DATA_RATE_DIV_MODE3_MASK | DPLL_CLK_SEL_MODE3);
-+		if (link_rate <= RATE_2_7)
++		if (link_rate <= LINK_RATE_2_7)
 +			val |= FIELD_PREP(DPLL_DATA_RATE_DIV_MODE3_MASK, 2);
 +		else
 +			val |= FIELD_PREP(DPLL_DATA_RATE_DIV_MODE3_MASK, 1);
@@ -5469,36 +5665,36 @@ index 0000000000000..7aac39df0ab02
 +	cdns_phy_reg_write(cdns_phy, PHY_PMA_CMN_CTRL1, val);
 +}
 +
-+static int wait_for_ack(struct cdns_hdptx_phy *cdns_phy, u32 reg, u32 mask,
++static int wait_for_ack(struct cdns_hdptx_phy *cdns_phy,
++			u32 reg, u32 mask,
 +			const char *err_msg)
 +{
-+	u32 val, i;
++	int ret;
++	u32 val;
 +
-+	for (i = 0; i < 10; i++) {
-+		val = cdns_phy_reg_read(cdns_phy, reg);
-+		if (val & mask)
-+			return 0;
-+		msleep(20);
-+	}
++	ret = read_poll_timeout(cdns_phy_reg_read,
++				val, val & mask, 20, 1000,
++				false, cdns_phy, reg);
++	if (ret < 0)
++		dev_err(cdns_phy->dev, "%s\n", err_msg);
 +
-+	dev_err(cdns_phy->dev, "%s\n", err_msg);
-+	return -ETIMEDOUT;
++	return ret;
 +}
 +
-+static int wait_for_ack_clear(struct cdns_hdptx_phy *cdns_phy, u32 reg, u32 mask,
++static int wait_for_ack_clear(struct cdns_hdptx_phy *cdns_phy,
++			      u32 reg, u32 mask,
 +			      const char *err_msg)
 +{
-+	u32 val, i;
++	int ret;
++	u32 val;
 +
-+	for (i = 0; i < 10; i++) {
-+		val = cdns_phy_reg_read(cdns_phy, reg);
-+		if (!(val & mask))
-+			return 0;
-+		msleep(20);
-+	}
++	ret = read_poll_timeout(cdns_phy_reg_read,
++				val, !(val & mask), 20, 1000,
++				false, cdns_phy, reg);
++	if (ret < 0)
++		dev_err(cdns_phy->dev, "%s\n", err_msg);
 +
-+	dev_err(cdns_phy->dev, "%s\n", err_msg);
-+	return -ETIMEDOUT;
++	return ret;
 +}
 +
 +static int hdptx_dp_phy_power_up(struct cdns_hdptx_phy *cdns_phy)
@@ -5535,23 +5731,15 @@ index 0000000000000..7aac39df0ab02
 +	 * state in order to transmit data)
 +	 */
 +	cdns_phy_reg_write(cdns_phy, PHY_HDP_MODE_CTRL, POWER_STATE_A0);
-+	ret = wait_for_ack(cdns_phy, PHY_HDP_MODE_CTRL, POWER_STATE_A0_ACK,
++
++	return wait_for_ack(cdns_phy, PHY_HDP_MODE_CTRL, POWER_STATE_A0_ACK,
 +			   "Wait A0 Ack failed");
-+	if (ret < 0)
-+		return ret;
-+
-+	cdns_phy->power_up = true;
-+
-+	return ret;
 +}
 +
 +static int hdptx_dp_phy_power_down(struct cdns_hdptx_phy *cdns_phy)
 +{
 +	u16 val;
 +	int ret;
-+
-+	if (!cdns_phy->power_up)
-+		return 0;
 +
 +	/* Place the PHY lanes in the A3 power state. */
 +	cdns_phy_reg_write(cdns_phy, PHY_HDP_MODE_CTRL, POWER_STATE_A3);
@@ -5573,17 +5761,13 @@ index 0000000000000..7aac39df0ab02
 +	val = cdns_phy_reg_read(cdns_phy, PHY_HDP_CLK_CTL);
 +	val &= ~PLL_EN;
 +	cdns_phy_reg_write(cdns_phy, PHY_HDP_CLK_CTL, val);
-+	ret = wait_for_ack_clear(cdns_phy, PHY_HDP_CLK_CTL, PLL_READY,
-+				 "Wait PLL Ack clear failed");
-+	if (ret)
-+		return ret;
 +
-+	cdns_phy->power_up = false;
-+	return 0;
++	return  wait_for_ack_clear(cdns_phy, PHY_HDP_CLK_CTL, PLL_READY,
++				 "Wait PLL Ack clear failed");
 +}
 +
-+static int cdns_hdptx_dp_configure(struct phy *phy,
-+				   union phy_configure_opts *opts)
++static int hdptx_dp_configure(struct phy *phy,
++			      union phy_configure_opts *opts)
 +{
 +	struct cdns_hdptx_phy *cdns_phy = phy_get_drvdata(phy);
 +
@@ -5595,9 +5779,6 @@ index 0000000000000..7aac39df0ab02
 +		return false;
 +	}
 +
-+	/* Disable phy clock if PHY in power up state */
-+	hdptx_dp_phy_power_down(cdns_phy);
-+
 +	if (cdns_phy->ref_clk_rate == REF_CLK_27MHZ) {
 +		hdptx_dp_phy_pma_cmn_cfg_27mhz(cdns_phy);
 +		hdptx_dp_phy_pma_cmn_pll0_27mhz(cdns_phy);
@@ -5605,82 +5786,40 @@ index 0000000000000..7aac39df0ab02
 +		dev_err(cdns_phy->dev, "Not support ref clock rate\n");
 +	}
 +
-+	/* PHY power up */
-+	return hdptx_dp_phy_power_up(cdns_phy);
-+}
-+
-+static bool hdptx_phy_check_alive(struct cdns_hdptx_phy *cdns_phy)
-+{
-+	u32  alive, newalive;
-+	u8 retries_left = 50;
-+
-+	alive = readl(cdns_phy->regs + KEEP_ALIVE);
-+
-+	while (retries_left--) {
-+		udelay(2);
-+
-+		newalive = readl(cdns_phy->regs + KEEP_ALIVE);
-+		if (alive == newalive)
-+			continue;
-+		return true;
-+	}
-+	return false;
++	return 0;
 +}
 +
 +static int hdptx_clk_enable(struct cdns_hdptx_phy *cdns_phy)
 +{
 +	struct device *dev = cdns_phy->dev;
 +	u32 ref_clk_rate;
-+	int ret;
 +
-+	cdns_phy->ref_clk = devm_clk_get(dev, "ref");
++	cdns_phy->ref_clk =  devm_clk_get_enabled(dev, "ref");
 +	if (IS_ERR(cdns_phy->ref_clk)) {
 +		dev_err(dev, "phy ref clock not found\n");
 +		return PTR_ERR(cdns_phy->ref_clk);
 +	}
 +
-+	cdns_phy->apb_clk = devm_clk_get(dev, "apb");
-+	if (IS_ERR(cdns_phy->apb_clk)) {
-+		dev_err(dev, "phy apb clock not found\n");
-+		return PTR_ERR(cdns_phy->apb_clk);
-+	}
-+
-+	ret = clk_prepare_enable(cdns_phy->ref_clk);
-+	if (ret) {
-+		dev_err(cdns_phy->dev, "Failed to prepare ref clock\n");
-+		return ret;
-+	}
-+
 +	ref_clk_rate = clk_get_rate(cdns_phy->ref_clk);
 +	if (!ref_clk_rate) {
 +		dev_err(cdns_phy->dev, "Failed to get ref clock rate\n");
-+		goto err_ref_clk;
++		return -EINVAL;
 +	}
 +
 +	if (ref_clk_rate == REF_CLK_27MHZ) {
 +		cdns_phy->ref_clk_rate = ref_clk_rate;
 +	} else {
 +		dev_err(cdns_phy->dev, "Not support Ref Clock Rate(%dHz)\n", ref_clk_rate);
-+		goto err_ref_clk;
++		return -EINVAL;
 +	}
 +
-+	ret = clk_prepare_enable(cdns_phy->apb_clk);
-+	if (ret) {
-+		dev_err(cdns_phy->dev, "Failed to prepare apb clock\n");
-+		goto err_ref_clk;
++	cdns_phy->apb_clk =  devm_clk_get_enabled(dev, "apb");
++	if (IS_ERR(cdns_phy->apb_clk)) {
++		dev_err(dev, "phy apb clock not found\n");
++		return PTR_ERR(cdns_phy->apb_clk);
 +	}
 +
 +	return 0;
-+
-+err_ref_clk:
-+	clk_disable_unprepare(cdns_phy->ref_clk);
-+	return -EINVAL;
-+}
-+
-+static void hdptx_clk_disable(struct cdns_hdptx_phy *cdns_phy)
-+{
-+	clk_disable_unprepare(cdns_phy->apb_clk);
-+	clk_disable_unprepare(cdns_phy->ref_clk);
 +}
 +
 +static void hdptx_hdmi_arc_config(struct cdns_hdptx_phy *cdns_phy)
@@ -5793,7 +5932,7 @@ index 0000000000000..7aac39df0ab02
 +	/* PHY Registers */
 +	val = cdns_phy_reg_read(cdns_phy, PHY_PMA_CMN_CTRL1);
 +	val &= ~CMA_REF_CLK_DIG_DIV_MASK;
-+	val |= FIELD_PREP(CMA_REF_CLK_DIG_DIV_MASK, p_ctrl_table->cmn_ref_clk_dig_div);
++	val |= FIELD_PREP(CMA_REF_CLK_DIG_DIV_MASK, CMN_REF_CLK_DIG_DIV);
 +	cdns_phy_reg_write(cdns_phy, PHY_PMA_CMN_CTRL1, val);
 +
 +	val = cdns_phy_reg_read(cdns_phy, PHY_HDP_CLK_CTL);
@@ -5805,7 +5944,7 @@ index 0000000000000..7aac39df0ab02
 +	/* Common control module control and diagnostic registers */
 +	val = cdns_phy_reg_read(cdns_phy, CMN_CDIAG_REFCLK_CTRL);
 +	val &= ~DIG_REF_CLK_DIV_SCALER_MASK;
-+	val |= FIELD_PREP(DIG_REF_CLK_DIV_SCALER_MASK, p_ctrl_table->ref_clk_divider_scaler);
++	val |= FIELD_PREP(DIG_REF_CLK_DIV_SCALER_MASK, REF_CLK_DIVIDER_SCALER);
 +	val |= REFCLK_TERMINATION_EN_OVERRIDE_EN | REFCLK_TERMINATION_EN_OVERRIDE;
 +	cdns_phy_reg_write(cdns_phy, CMN_CDIAG_REFCLK_CTRL, val);
 +
@@ -5973,7 +6112,7 @@ index 0000000000000..7aac39df0ab02
 +	 */
 +	for (i = 0; i < ARRAY_SIZE(pixel_clk_output_ctrl_table); i++) {
 +		rate = pixel_clk_output_ctrl_table[i].feedback_factor *
-+		       pixel_clk_output_ctrl_table[i].pixel_clk_freq_min / 1000;
++		       pixel_clk_output_ctrl_table[i].pixel_clk_freq / 1000;
 +		if (char_rate_khz == rate) {
 +			p_ctrl_table = &pixel_clk_output_ctrl_table[i];
 +			break;
@@ -5993,7 +6132,7 @@ index 0000000000000..7aac39df0ab02
 +	 * column matching with pixel_clk_output_pll_table.
 +	 */
 +	for (i = 0; i < ARRAY_SIZE(pixel_clk_output_pll_table); i++) {
-+		if (vco_freq == pixel_clk_output_pll_table[i].vco_freq_min &&
++		if (vco_freq == pixel_clk_output_pll_table[i].vco_freq &&
 +		    div_total == pixel_clk_output_pll_table[i].feedback_div_total) {
 +			p_pll_table = &pixel_clk_output_pll_table[i];
 +			break;
@@ -6050,6 +6189,35 @@ index 0000000000000..7aac39df0ab02
 +			    "Wait A3 Ack failed");
 +}
 +
++static int hdptx_hdmi_configure(struct phy *phy,
++				union phy_configure_opts *opts)
++{
++	struct cdns_hdptx_phy *cdns_phy = phy_get_drvdata(phy);
++	u32 reg;
++	int ret;
++
++	cdns_phy->hdmi.tmds_char_rate = opts->hdmi.tmds_char_rate;
++
++	/* Check HDMI FW alive before HDMI PHY init */
++	ret = readl_poll_timeout(cdns_phy->regs + KEEP_ALIVE, reg,
++				 reg & CDNS_KEEP_ALIVE_MASK, 500,
++				 CDNS_KEEP_ALIVE_TIMEOUT);
++	if (ret < 0) {
++		dev_err(cdns_phy->dev, "NO HDMI FW running\n");
++		return -ENXIO;
++	}
++
++	/* Configure PHY */
++	if (hdptx_hdmi_phy_cfg(cdns_phy, cdns_phy->hdmi.tmds_char_rate) < 0) {
++		dev_err(cdns_phy->dev, "failed to set phy pclock\n");
++		return -EINVAL;
++	}
++
++	hdptx_hdmi_phy_set_vswing(cdns_phy);
++
++	return 0;
++}
++
 +static int cdns_hdptx_phy_on(struct phy *phy)
 +{
 +	struct cdns_hdptx_phy *cdns_phy = phy_get_drvdata(phy);
@@ -6068,7 +6236,6 @@ index 0000000000000..7aac39df0ab02
 +		return hdptx_dp_phy_power_down(cdns_phy);
 +	else
 +		return hdptx_hdmi_phy_power_down(cdns_phy);
-+	return 0;
 +}
 +
 +static int
@@ -6082,15 +6249,10 @@ index 0000000000000..7aac39df0ab02
 +		return 0;
 +
 +	for (i = 0; i < ARRAY_SIZE(pixel_clk_output_ctrl_table); i++)
-+		if (rate == pixel_clk_output_ctrl_table[i].pixel_clk_freq_min)
++		if (rate == pixel_clk_output_ctrl_table[i].pixel_clk_freq)
 +			return 0;
 +
 +	return -EINVAL;
-+}
-+
-+static int cdns_hdptx_phy_init(struct phy *phy)
-+{
-+	return 0;
 +}
 +
 +static int cdns_hdptx_phy_set_mode(struct phy *phy, enum phy_mode mode, int submode)
@@ -6100,12 +6262,6 @@ index 0000000000000..7aac39df0ab02
 +
 +	if (mode == PHY_MODE_DP) {
 +		hdptx_dp_phy_ref_clock_type(cdns_phy);
-+
-+		/* PHY power up */
-+		ret = hdptx_dp_phy_power_up(cdns_phy);
-+		if (ret < 0)
-+			return ret;
-+
 +		hdptx_dp_aux_cfg(cdns_phy);
 +	} else if (mode != PHY_MODE_HDMI) {
 +		dev_err(&phy->dev, "Invalid PHY mode: %u\n", mode);
@@ -6115,47 +6271,16 @@ index 0000000000000..7aac39df0ab02
 +	return ret;
 +}
 +
-+static int cdns_hdptx_hdmi_configure(struct phy *phy,
-+				     union phy_configure_opts *opts)
-+{
-+	struct cdns_hdptx_phy *cdns_phy = phy_get_drvdata(phy);
-+	int ret;
-+
-+	cdns_phy->hdmi.tmds_char_rate = opts->hdmi.tmds_char_rate;
-+
-+	/* Check HDMI FW alive before HDMI PHY init */
-+	ret = hdptx_phy_check_alive(cdns_phy);
-+	if (!ret) {
-+		dev_err(cdns_phy->dev, "NO HDMI FW running\n");
-+		return -ENXIO;
-+	}
-+
-+	/* Configure PHY */
-+	if (hdptx_hdmi_phy_cfg(cdns_phy, cdns_phy->hdmi.tmds_char_rate) < 0) {
-+		dev_err(cdns_phy->dev, "failed to set phy pclock\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = hdptx_hdmi_phy_power_up(cdns_phy);
-+	if (ret < 0)
-+		return ret;
-+
-+	hdptx_hdmi_phy_set_vswing(cdns_phy);
-+
-+	return 0;
-+}
-+
 +static int cdns_hdptx_configure(struct phy *phy,
 +				union phy_configure_opts *opts)
 +{
 +	if (phy->attrs.mode == PHY_MODE_DP)
-+		return cdns_hdptx_dp_configure(phy, opts);
++		return hdptx_dp_configure(phy, opts);
 +	else
-+		return cdns_hdptx_hdmi_configure(phy, opts);
++		return hdptx_hdmi_configure(phy, opts);
 +}
 +
 +static const struct phy_ops cdns_hdptx_phy_ops = {
-+	.init = cdns_hdptx_phy_init,
 +	.set_mode = cdns_hdptx_phy_set_mode,
 +	.configure = cdns_hdptx_configure,
 +	.power_on = cdns_hdptx_phy_on,
@@ -6206,26 +6331,10 @@ index 0000000000000..7aac39df0ab02
 +	}
 +
 +	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	if (IS_ERR(phy_provider)) {
-+		ret = PTR_ERR(phy_provider);
-+		goto clk_disable;
-+	}
-+
-+	dev_dbg(dev, "probe success!\n");
++	if (IS_ERR(phy_provider))
++		return PTR_ERR(phy_provider);
 +
 +	return 0;
-+
-+clk_disable:
-+	hdptx_clk_disable(cdns_phy);
-+
-+	return -EINVAL;
-+}
-+
-+static void cdns_hdptx_phy_remove(struct platform_device *pdev)
-+{
-+	struct cdns_hdptx_phy *cdns_phy = platform_get_drvdata(pdev);
-+
-+	hdptx_clk_disable(cdns_phy);
 +}
 +
 +static const struct of_device_id cdns_hdptx_phy_of_match[] = {
@@ -6236,7 +6345,6 @@ index 0000000000000..7aac39df0ab02
 +
 +static struct platform_driver cdns_hdptx_phy_driver = {
 +	.probe = cdns_hdptx_phy_probe,
-+	.remove = cdns_hdptx_phy_remove,
 +	.driver = {
 +		.name	= "cdns-hdptx-phy",
 +		.of_match_table	= cdns_hdptx_phy_of_match,
@@ -6248,15 +6356,15 @@ index 0000000000000..7aac39df0ab02
 +MODULE_DESCRIPTION("Cadence HDP-TX DP/HDMI PHY driver");
 +MODULE_LICENSE("GPL");
 
-From patchwork Tue Oct 29 06:02:15 2024
+From patchwork Tue Nov 26 14:11:52 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,7/8] arm64: dts: imx8mq: Add DCSS + HDMI/DP display pipeline
+Subject: [v19,7/8] arm64: dts: imx8mq: Add DCSS + HDMI/DP display pipeline
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622019
+X-Patchwork-Id: 626195
 Message-Id: 
- <7d4da909f2ee24163ff99e069785e075446eef2a.1730172244.git.Sandor.yu@nxp.com>
+ <d5fe3953ce13aa7e068190291d94c213302f8109.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -6268,7 +6376,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:15 +0800
+Date: Tue, 26 Nov 2024 22:11:52 +0800
 
 From: Alexander Stein <alexander.stein@ew.tq-group.com>
 
@@ -6277,7 +6385,7 @@ by the connector type connected to mhdp port@1 endpoint.
 
 Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 ---
-v17->v18:
+v17->v19:
  *No change
 
  arch/arm64/boot/dts/freescale/imx8mq.dtsi | 68 +++++++++++++++++++++++
@@ -6363,15 +6471,15 @@ index d51de8d899b2b..df8ba1d5391ae 100644
  				compatible = "fsl,imx8m-irqsteer", "fsl,imx-irqsteer";
  				reg = <0x32e2d000 0x1000>;
 
-From patchwork Tue Oct 29 06:02:16 2024
+From patchwork Tue Nov 26 14:11:53 2024
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Subject: [v18,8/8] arm64: dts: imx8mq: tqma8mq-mba8mx: Enable HDMI support
+Subject: [v19,8/8] arm64: dts: imx8mq: tqma8mq-mba8mx: Enable HDMI support
 From: Sandor Yu <Sandor.yu@nxp.com>
-X-Patchwork-Id: 622020
+X-Patchwork-Id: 626196
 Message-Id: 
- <3c52cbe438f1bf10f4d1ec7867452c24d8ded8d1.1730172244.git.Sandor.yu@nxp.com>
+ <ae6f043294e1d34c2473d657bb01ff967b85ef0d.1732627815.git.Sandor.yu@nxp.com>
 To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  neil.armstrong@linaro.org, Laurent.pinchart@ideasonboard.com,
  jonas@kwiboo.se, jernej.skrabec@gmail.com, airlied@gmail.com,
@@ -6383,7 +6491,7 @@ To: dmitry.baryshkov@linaro.org, andrzej.hajda@intel.com,
  mripard@kernel.org
 Cc: kernel@pengutronix.de, linux-imx@nxp.com, Sandor.yu@nxp.com,
  oliver.brown@nxp.com, alexander.stein@ew.tq-group.com, sam@ravnborg.org
-Date: Tue, 29 Oct 2024 14:02:16 +0800
+Date: Tue, 26 Nov 2024 22:11:53 +0800
 
 From: Alexander Stein <alexander.stein@ew.tq-group.com>
 
@@ -6392,15 +6500,18 @@ for HDMI output.
 
 Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
 ---
+v18->v19:
+- Move property data-lanes to endpoint of port@1
+
 v17->v18:
 - replace lane-mapping with data-lanes
 
- .../dts/freescale/imx8mq-tqma8mq-mba8mx.dts   | 21 +++++++++++++++++++
- arch/arm64/boot/dts/freescale/mba8mx.dtsi     | 11 ++++++++++
- 2 files changed, 32 insertions(+)
+ .../dts/freescale/imx8mq-tqma8mq-mba8mx.dts   | 26 +++++++++++++++++++
+ arch/arm64/boot/dts/freescale/mba8mx.dtsi     | 11 ++++++++
+ 2 files changed, 37 insertions(+)
 
 diff --git a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
-index 0165f3a259853..9bbc33e9ca299 100644
+index 0165f3a259853..5ba06a411c6a1 100644
 --- a/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
 +++ b/arch/arm64/boot/dts/freescale/imx8mq-tqma8mq-mba8mx.dts
 @@ -53,6 +53,10 @@ &btn2 {
@@ -6429,24 +6540,29 @@ index 0165f3a259853..9bbc33e9ca299 100644
  &i2c1 {
  	expander2: gpio@25 {
  		compatible = "nxp,pca9555";
-@@ -91,6 +103,15 @@ &led2 {
+@@ -91,6 +103,20 @@ &led2 {
  	gpios = <&gpio3 16 GPIO_ACTIVE_HIGH>;
  };
  
 +&mhdp {
-+	data-lanes = <1 2 3 4>;
 +	status = "okay";
-+};
++	ports {
++		port@1 {
++			reg = <1>;
 +
-+&mhdp_out {
-+	remote-endpoint = <&hdmi_connector_in>;
++			mhdp_out: endpoint {
++				remote-endpoint = <&hdmi_connector_in>;
++				data-lanes = <0 1 2 3>;
++			};
++		};
++	};
 +};
 +
  /* PCIe slot on X36 */
  &pcie0 {
  	reset-gpio = <&expander0 14 GPIO_ACTIVE_LOW>;
 diff --git a/arch/arm64/boot/dts/freescale/mba8mx.dtsi b/arch/arm64/boot/dts/freescale/mba8mx.dtsi
-index c60c7a9e54aff..fedc284ebb506 100644
+index 58e3865c28895..d04b75a76dfe6 100644
 --- a/arch/arm64/boot/dts/freescale/mba8mx.dtsi
 +++ b/arch/arm64/boot/dts/freescale/mba8mx.dtsi
 @@ -89,6 +89,17 @@ gpio_delays: gpio-delays {
