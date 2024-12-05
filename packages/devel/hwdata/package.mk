@@ -2,8 +2,8 @@
 # Copyright (C) 2022-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="hwdata"
-PKG_VERSION="0.389"
-PKG_SHA256="34813e6821a5dab0f663a363026e4d17e880e5f5f2ed49244c42263b226ff98a"
+PKG_VERSION="0.390"
+PKG_SHA256="f10684093d2a7780de8a96d3dd8a2dd544ed6136dd359197750c42bb08ce526f"
 PKG_LICENSE="GPL-2.0"
 PKG_SITE="https://github.com/vcrhonek/hwdata"
 PKG_URL="https://github.com/vcrhonek/hwdata/archive/refs/tags/v${PKG_VERSION}.tar.gz"
