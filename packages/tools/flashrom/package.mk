@@ -2,8 +2,8 @@
 # Copyright (C) 2019-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="flashrom"
-PKG_VERSION="1.5.0"
-PKG_SHA256="3ef431cd0f039c1f7b929e81be145885e79192d16a843827e42977f488d9fec5"
+PKG_VERSION="1.5.1"
+PKG_SHA256="1f934b076ed49eace203655ec249fc7861a6b8e87fe4aef732e47b6e485b6293"
 PKG_LICENSE="GPL"
 PKG_SITE="https://www.flashrom.org"
 PKG_URL="https://download.flashrom.org/releases/${PKG_NAME}-v${PKG_VERSION}.tar.xz"
