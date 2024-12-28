@@ -43,4 +43,5 @@ PKG_CMAKE_OPTS_TARGET="-DCMAKE_POSITION_INDEPENDENT_CODE=1 \
                        -DENABLE_WERROR=0 \
                        -DENABLE_XATTR=ON \
                        -DENABLE_ZLIB=ON \
-                       -DENABLE_ZSTD=ON"
+                       -DENABLE_ZSTD=ON \
+                       -DPOSIX_REGEX_LIB=LIBPCRE2POSIX"
