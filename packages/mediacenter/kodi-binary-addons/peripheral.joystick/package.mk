@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="peripheral.joystick"
-PKG_VERSION="22.0.2-Piers"
-PKG_SHA256="44232cc280dbfc1e5bed3a3afc2378b99fba28ad6485df42b81c52f5f48e7b03"
+PKG_VERSION="22.0.3-Piers"
+PKG_SHA256="6bd4acb94b81eb9004a795822e6416639f167d2641a1f05eaa5f44b925794217"
 PKG_REV="1"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
