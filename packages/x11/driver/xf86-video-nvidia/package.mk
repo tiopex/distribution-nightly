@@ -43,6 +43,7 @@ makeinstall_target() {
     cp -P kernel/nvidia.ko ${INSTALL}/usr/lib/nvidia
   mkdir -p ${INSTALL}/$(get_full_module_dir)/nvidia
     ln -sf /var/lib/nvidia.ko      ${INSTALL}/$(get_full_module_dir)/nvidia/nvidia.ko
+    cp -P kernel/nvidia-drm.ko     ${INSTALL}/$(get_full_module_dir)/nvidia
     cp -P kernel/nvidia-uvm.ko     ${INSTALL}/$(get_full_module_dir)/nvidia
     cp -P kernel/nvidia-modeset.ko ${INSTALL}/$(get_full_module_dir)/nvidia
 
