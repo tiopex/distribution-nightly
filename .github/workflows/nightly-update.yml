@@ -27,12 +27,14 @@ jobs:
           
           # update submodules to the latest remote version
           git submodule update --remote --merge
-          
+          echo "$(git status -z --porcelain)"
           echo "changes=$(git status -z --porcelain)" >> $GITHUB_OUTPUT
+
       - name: Push changes
         if: ${{ steps.update.outputs.changes }}
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Actions"
+          git tag -a $(date +'%Y%m%d') -m "build nightly"
           git commit -am "Updated submodules $(date)"
-          git push
+          git push --tags
