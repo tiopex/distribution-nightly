@@ -35,6 +35,5 @@ jobs:
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Actions"
-          git tag -a $(date +'%Y%m%d') -m "build nightly"
           git commit -am "Updated submodules $(date)"
-          git push --tags
+          git push
