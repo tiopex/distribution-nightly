@@ -1,11 +1,14 @@
-From 5778cfc64913abc8c80160bb709ec359362fc8ac Mon Sep 17 00:00:00 2001
+From c1ea5300b2ab0a1cdf5b89989971834555ee2302 Mon Sep 17 00:00:00 2001
 From: Christian Hewitt <christianshewitt@gmail.com>
 Date: Tue, 8 Oct 2024 06:48:13 +0000
-Subject: [PATCH 2/2] TESTING: test uart_ao_a_pins bias disable on Odroid C2
- and WeTek Hub
+Subject: [PATCH 2/2] LOCAL: test uart_ao_a_pins bias disable on Odroid C2 and
+ WeTek Hub
 
-This appears to resolve the reports of non-booting C2 boards. No feedback
-on WeTek Hub yet.
+This resolves reports of non-booting C2 boards. The long term fix
+is [0] which is merged for Linux 6.16 and will appear in u-boot
+with a future upstream device-tree sync.
+
+[0] https://patchwork.kernel.org/project/linux-amlogic/cover/20250329185855.854186-1-martin.blumenstingl@googlemail.com/
 
 Suggested-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 Signed-off-by: Christian Hewitt <christianshewitt@gmail.com>
