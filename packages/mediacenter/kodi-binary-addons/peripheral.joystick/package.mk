@@ -5,7 +5,7 @@
 PKG_NAME="peripheral.joystick"
 PKG_VERSION="22.0.3-Piers"
 PKG_SHA256="6bd4acb94b81eb9004a795822e6416639f167d2641a1f05eaa5f44b925794217"
-PKG_REV="1"
+PKG_REV="2"
 PKG_ARCH="any"
 PKG_LICENSE="GPL"
 PKG_SITE="https://github.com/xbmc/peripheral.joystick"
