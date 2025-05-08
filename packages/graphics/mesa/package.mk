@@ -61,9 +61,15 @@ if listcontains "${GRAPHIC_DRIVERS}" "etnaviv"; then
   PKG_DEPENDS_TARGET+=" pycparser:host"
 fi
 
-if listcontains "${GRAPHIC_DRIVERS}" "(iris|panfrost)"; then
+if listcontains "${GRAPHIC_DRIVERS}" "iris"; then
   PKG_DEPENDS_TARGET+=" mesa:host"
   PKG_MESON_OPTS_TARGET+=" -Dmesa-clc=system"
+fi
+
+if listcontains "${GRAPHIC_DRIVERS}" "panfrost"; then
+  PKG_DEPENDS_TARGET+=" mesa:host"
+  PKG_MESON_OPTS_HOST+=" -Dtools=panfrost"
+  PKG_MESON_OPTS_TARGET+=" -Dprecomp-compiler=system -Dmesa-clc=system"
 fi
 
 if listcontains "${GRAPHIC_DRIVERS}" "(nvidia|nvidia-ng)" ||
@@ -120,4 +126,8 @@ makeinstall_host() {
   mkdir -p "${TOOLCHAIN}/bin"
     cp -a src/compiler/clc/mesa_clc "${TOOLCHAIN}/bin"
     cp -a src/compiler/spirv/vtn_bindgen2 "${TOOLCHAIN}/bin"
+
+    if listcontains "${GRAPHIC_DRIVERS}" "panfrost"; then
+      cp -a src/panfrost/clc/panfrost_compile "${TOOLCHAIN}/bin"
+    fi
 }
