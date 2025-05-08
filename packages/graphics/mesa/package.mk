@@ -61,7 +61,7 @@ if listcontains "${GRAPHIC_DRIVERS}" "etnaviv"; then
   PKG_DEPENDS_TARGET+=" pycparser:host"
 fi
 
-if listcontains "${GRAPHIC_DRIVERS}" "iris"; then
+if listcontains "${GRAPHIC_DRIVERS}" "(iris|panfrost)"; then
   PKG_DEPENDS_TARGET+=" mesa:host"
   PKG_MESON_OPTS_TARGET+=" -Dmesa-clc=system"
 fi
