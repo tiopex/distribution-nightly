@@ -69,8 +69,7 @@ if listcontains "${GRAPHIC_DRIVERS}" "(iris|panfrost)"; then
 fi
 
 if listcontains "${GRAPHIC_DRIVERS}" "(nvidia|nvidia-ng)" ||
-              [ "${OPENGL_SUPPORT}" = "yes" ] &&
-              [ "${DISPLAYSERVER}" != "x11" ]; then
+              [ "${OPENGL_SUPPORT}" = "yes" -a "${DISPLAYSERVER}" != "x11" ]; then
   PKG_DEPENDS_TARGET+=" libglvnd"
   PKG_MESON_OPTS_TARGET+=" -Dglvnd=enabled"
 else
