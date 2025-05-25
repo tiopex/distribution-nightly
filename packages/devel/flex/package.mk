@@ -18,14 +18,6 @@ PKG_CONFIGURE_OPTS_HOST="--enable-static --disable-shared --disable-rpath --with
 PKG_CONFIGURE_OPTS_TARGET="ac_cv_func_realloc_0_nonnull=yes \
                            ac_cv_func_malloc_0_nonnull=yes"
 
-pre_configure_target() {
-  export CC_FOR_BUILD="${CC}";
-  export CFLAGS_FOR_BUILD="${CFLAGS}";
-  export CPP_FOR_BUILD="${CPP}";
-  export CPPFLAGS_FOR_BUILD="${CPPFLAGS}";
-  export LDFLAGS_FOR_BUILD="${LDFLAGS}";
-}
-
 post_makeinstall_host() {
   cat >${TOOLCHAIN}/bin/lex  <<"EOF"
 #!/bin/sh
