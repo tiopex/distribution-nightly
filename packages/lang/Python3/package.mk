@@ -114,6 +114,13 @@ post_make_target() {
   sed -e "s,\([\'|\ ]\)/usr/lib,\1${SYSROOT_PREFIX}/usr/lib,g" -i ${PKG_SYSCONFIG_FILE}
 }
 
+pre_configure_target() {
+  export PYTHON_MODULES_INCLUDE="${TARGET_INCDIR}"
+  export PYTHON_MODULES_LIB="${TARGET_LIBDIR}"
+  export DISABLED_EXTENSIONS="${PKG_PY_DISABLED_MODULES}"
+  export PKG_CONFIG_PATH="$(get_install_dir xz)/usr/lib/pkgconfig:${PKG_CONFIG_PATH}"
+}
+
 post_makeinstall_target() {
   ln -sf ${PKG_PYTHON_VERSION} ${INSTALL}/usr/bin/python
 
