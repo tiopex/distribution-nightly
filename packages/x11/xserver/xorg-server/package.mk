@@ -3,8 +3,8 @@
 # Copyright (C) 2018-present Team LibreELEC (https://libreelec.tv)
 
 PKG_NAME="xorg-server"
-PKG_VERSION="21.1.16"
-PKG_SHA256="b14a116d2d805debc5b5b2aac505a279e69b217dae2fae2dfcb62400471a9970"
+PKG_VERSION="21.1.17"
+PKG_SHA256="a29441c21a55f4cd2c2d93d3a4ec24a4c15f053d55aea104f97da32f66efecd0"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.X.org"
 PKG_URL="https://www.x.org/releases/individual/xserver/${PKG_NAME}-${PKG_VERSION}.tar.xz"
