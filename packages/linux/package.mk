@@ -23,8 +23,8 @@ case "${LINUX}" in
     PKG_PATCH_DIRS="default"
     ;;
   raspberrypi)
-    PKG_VERSION="1ceca9a59ef75bc71e7ef3c134685a58e13d2eb0" # 6.12.34
-    PKG_SHA256="a89871f6b2c6658a49c1e78270d76070ad20cf95b1b6cad223825e0c33042e3f"
+    PKG_VERSION="8f77e03530f65209a377d25023e912b288e039cd" # 6.12.34
+    PKG_SHA256="6381f6365eb4a57d639bebdadfea14b347b4924c01c37e509f5cdac9b213d236"
     PKG_URL="https://github.com/raspberrypi/linux/archive/${PKG_VERSION}.tar.gz"
     PKG_SOURCE_NAME="linux-${LINUX}-${PKG_VERSION}.tar.gz"
     PKG_PATCH_DIRS="raspberrypi rtlwifi/6.13 rtlwifi/6.14 rtlwifi/6.15"
