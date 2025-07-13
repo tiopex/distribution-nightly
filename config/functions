@@ -641,6 +641,7 @@ $(python3 -c "import os; print('cpp_link_args = {}'.format([x for x in os.getenv
 ipc_rmid_deferred_release = true
 needs_exe_wrapper = true
 root = '$SYSROOT_PREFIX/usr'
+sys_root = '$SYSROOT_PREFIX'
 ${!properties}
 EOF
 }
@@ -1076,7 +1077,7 @@ calculate_stamp() {
   [ -n "$DEVICE" ] && stamp+=" $PROJECT_DIR/$PROJECT/devices/$DEVICE/patches/$PKG_NAME"
   [ -n "$PKG_NEED_UNPACK" ] && stamp+=" $PKG_NEED_UNPACK"
 
-  data="$(find -L ${stamp} -type f -not -name '.*' 2>/dev/null | sed "s|^${ROOT}/||" | LC_ALL=C sort -u | xargs sha256sum)"
+  data="$(find -L ${stamp} -type f -not -name '.*' -print0 2>/dev/null | sed -z "s|^${ROOT}/||" | LC_ALL=C sort -zu | xargs -0 sha256sum)"
   [ -n "${PKG_STAMP}" ] && data+=$'\n'"$(echo "${PKG_STAMP}" | sha256sum)"
 
   echo "${data}" | sha256sum | cut -d" " -f1
@@ -1749,7 +1750,7 @@ pkg_lock_status() {
   if [ "${status}" = "LOCKED" ]; then
     echo "${this_job} ${PARALLEL_SEQ} ${task} ${pkg}" >"${THREAD_CONTROL}/locks/${pkg}.${task}.owner"
   elif [ "${status}" = "UNLOCK" ]; then
-    rm "${THREAD_CONTROL}/locks/${pkg}.${task}.owner"
+    rm -f "${THREAD_CONTROL}/locks/${pkg}.${task}.owner"
   fi
 
   return 0
