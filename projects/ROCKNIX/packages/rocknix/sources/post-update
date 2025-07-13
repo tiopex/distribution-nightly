@@ -190,6 +190,10 @@ grep -q "^system\.shutdown_delay=" /storage/.config/system/configs/system.cfg ||
 grep -q "^system\.shutdown_delay_running_game=" /storage/.config/system/configs/system.cfg ||
   sed -i '$ a\system.shutdown_delay_running_game=900' /storage/.config/system/configs/system.cfg
 
-# Wipe lime3ds / azahar gptokeyb mappings as they have changed
+# Wipe azahar gptokeyb mappings as they have changed
 rm -rf /storage/.config/azahar/*.gptk
-rm -rf /storage/.config/lime3ds/*.gptk
+
+# Clean RGB10X mupen64plus-sa config
+if echo ${QUIRK_DEVICE} | grep RGB10X; then
+  rm -rf /storage/.config/mupen64plus
+fi

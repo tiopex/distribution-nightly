@@ -70,6 +70,8 @@
     <file>rk3588s-retro-lite-cm5</file>
     <file>rk3588s-retroled-cm5</file>
     <file>rk3588s-rock-5a</file>
+    <file>rk3588s-nanopi-r6c</file>
+    <file>rk3588s-nanopi-r6s</file>
   </RK3588>
   <S922X bootmethod="extlinux_fdtdir">
     <file>meson-g12b-odroid-go-ultra</file>
