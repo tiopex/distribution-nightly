@@ -1,0 +1,29 @@
+#!/bin/sh
+
+. /etc/profile
+
+# Set hostname
+HOSTNAME=$(get_setting system.hostname)
+echo ${HOSTNAME} >/proc/sys/kernel/hostname
+hostnamectl --transient hostname ${HOSTNAME}
+avahi-set-host-name ${HOSTNAME}
+
+# setup /etc/hosts
+rm -f /run/rocknix/hosts
+if [ -f /storage/.config/hosts.conf ]; then
+  cat /storage/.config/hosts.conf > /run/rocknix/hosts
+fi
+
+# setup /etc/resolv.conf
+rm -f /run/rocknix/resolv.conf
+if [ -f /storage/.config/resolv.conf ]; then
+  cat /storage/.config/resolv.conf > /run/rocknix/resolv.conf
+elif [ -f /dev/.kernel_ipconfig -a -f /proc/net/pnp ]; then
+  cat /proc/net/pnp > /run/rocknix/resolv.conf
+else
+  cat << EOF > /run/rocknix/resolv.conf
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+EOF
+fi
+

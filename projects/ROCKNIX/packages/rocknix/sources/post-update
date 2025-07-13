@@ -1,0 +1,195 @@
+#!/bin/bash
+# SPDX-License-Identifier: GPL-2.0
+# Copyright (C) 2023 JELOS (https://github.com/JustEnoughLinuxOS)
+
+. /etc/profile
+
+LOG="/var/log/boot.log"
+
+### This script contains items that we only want to execute after a ROCKNIX upgrade,
+### or after a fresh installation.
+
+### Items in this block should always run after updates.
+################################################################################
+
+echo "Rebuild library cache..." >>${LOG}
+tocon "Rebuilding library cache..."
+### Rebuild the library cache
+rm -f /storage/.cache/ld.so.cache
+ldconfig -X
+
+echo "Sync configuration files..." >>${LOG}
+tocon "Re-sync configuration files..."
+### Sync configurations
+if [ -d "/storage/.config/system/configs" ]
+then
+  EXCLUDE="--exclude=configs"
+fi
+
+### Remove and link es configs so they are managed with OS updates.
+for es_cfg in es_features.cfg es_systems.cfg
+do
+  mv /storage/.config/emulationstation/${es_cfg} /storage/.config/emulationstation/last_${es_cfg} >/dev/null 2>&1
+  ln -s /usr/config/emulationstation/${es_cfg} /storage/.config/emulationstation/${es_cfg}  >/dev/null 2>&1
+done
+
+rsync -a --delete ${EXCLUDE} /usr/config/system/ /storage/.config/system/
+rsync -a --ignore-existing /usr/config/game /storage/.config/
+rsync -a /usr/config/modules /storage/.config/
+
+if [ -f "/storage/.config/emulationstation/resources/logo.png" ]
+then
+  rm -f /storage/.config/emulationstation/resources/logo.png
+fi
+
+echo "Sync modules..." >>${LOG}
+tocon "Update tool modules..."
+rsync -a /usr/config/modules/* /storage/.config/modules/
+cp -f /usr/config/retroarch/retroarch-core-options.cfg /storage/.config/retroarch/retroarch-core-options.cfg
+
+### Apply developer ssh keys if they exist
+echo "Apply dev keys if available..." >>${LOG}
+if [ -e /usr/config/ssh/authorized_keys ]
+then
+  tocon "Update developer keys..."
+  cp /usr/config/ssh/authorized_keys /storage/.ssh
+fi
+
+### Sync rsync configs
+echo "Update rsync configuration files..." >>${LOG}
+rsync --ignore-existing /usr/config/rsync-rules.conf /storage/.config/
+rsync --ignore-existing /usr/config/rsync.conf /storage/.config/
+
+### Add cloud sync-related files if missing
+echo "Update cloud sync files..." >>${LOG}
+if [ -x "/usr/bin/cloud_sync_helper" ]; then
+  # Use the helper script to properly merge configurations
+  tocon "Updating cloud sync configuration..."
+  /usr/bin/cloud_sync_helper ${LOG}
+else
+  # Fall back to the simple copy if helper is not available
+  tocon "Updating cloud sync files..."
+  # Copy default cloud sync files if they don't exist
+  for config_file in cloud_sync-rules.txt.defaults cloud_sync.conf.defaults; do
+    if [ -f "/usr/config/${config_file}" ]; then
+      rsync --ignore-existing /usr/config/${config_file} /storage/.config/
+    fi
+  done
+  # Also copy the main config file if it doesn't exist
+  if [ -f "/usr/config/cloud_sync.conf" ]; then
+    rsync --ignore-existing /usr/config/cloud_sync.conf /storage/.config/
+    # Always update defaults file to ensure latest version
+    rsync /usr/config/cloud_sync.conf.defaults /storage/.config/
+  fi
+fi
+
+### Sync locale data
+tocon "Re-sync locale data..."
+rsync -a --delete /usr/config/locale/* /storage/.config/locale/ >>/var/log/configure.log 2>&1
+rm -rf /storage/.config/emulationstation/locale >>/var/log/configure.log 2>&1 ||:
+ln -sf /usr/share/locale /storage/.config/emulationstation/locale >>/var/log/configure.log 2>&1 ||:
+
+### Fix Japanese language bug
+if [ ! -e "/storage/.config/ppsspp/assets/NotoSansJP-Regular.ttf" ]
+then
+  cd /storage/.config/ppsspp/assets
+  cp /usr/config/ppsspp/assets/NotoSansJP-Regular.ttf .
+  ln -s NotoSansJP-Regular.ttf Roboto-Condensed.ttf
+  cd -
+fi
+
+### Add items below this line that are safe to remove after a period of time.
+################################################################################
+
+if echo ${HW_DEVICE}  | grep -E 'H700'; then
+  rsync -a /usr/config/ppsspp /storage/.config/
+  rsync -a /usr/config/flycast /storage/.config/
+fi
+
+# Update PPSSPP & PS2 configs on Retroid Devices
+if echo ${HW_DEVICE}  | grep -E 'SM8250|SM8550'; then
+  sed -i '/video_threaded =/c\video_threaded = "false"' /storage/.config/retroarch/retroarch.cfg
+fi
+
+# run the idtech script on update if folder does not exist
+if [ ! -d "/storage/.config/idtech" ]; then
+  /usr/bin/generate-idtech.sh
+fi
+
+# Clean up Dolphin
+rm -r /storage/.config/dolphin-emu/GC
+cp -rf /usr/config/dolphin-emu /storage/.config/
+
+# Remove gamepad overlays
+rm -r /tmp/overlays/gamepads
+
+# Clean hypseus/daphne mapping so the correct gets applied
+if echo ${QUIRK_DEVICE} | grep ARC; then
+    rm /storage/.config/game/configs/hypseus/hypinput.ini
+fi
+
+# Clean old dtb-overlays, they have been renamed to dtbo
+if [ "${HW_DEVICE}" = "RK3566" ] && \
+   [ $(ls -1 /flash/overlays/rk3566-undervolt-cpu*.dtb | wc -l) != 0 ]; then
+    mount -o remount,rw /flash
+    rm /flash/overlays/rk3566-undervolt-cpu*.dtb
+    sed -i '/FDTOVERLAYS/s/.dtb/.dtbo/g' /flash/extlinux/extlinux.conf
+    sed -i '/FDTOVERLAYS/s/.dtboo/.dtbo/g' /flash/extlinux/extlinux.conf
+    mount -o remount,ro /flash
+fi
+
+if [ "$(uname -m)" = "aarch64" ] && \
+   [ ! -d "/storage/roms/savestates/saturn/yabasanshiro" ]; then
+    mkdir "/storage/roms/savestates/saturn/yabasanshiro"
+    cp /storage/.config/yabasanshiro/*.yss /storage/roms/savestates/saturn/yabasanshiro/
+    cp /storage/.config/yabasanshiro/*.png /storage/roms/savestates/saturn/yabasanshiro/
+fi
+
+# Rename network.enabled to wifi.enabled
+sed -i 's/network.enabled/wifi.enabled/g' /storage/.config/system/configs/system.cfg
+
+# Add skip IPL/bios option tol dolphin config
+DINI=/storage/.config/dolphin-emu/Dolphin.ini
+grep -q "SkipIPL" "$DINI"
+if [ $? -ne 0 ]; then
+    sed -i "/\[Core\]/a SkipIPL = True" $DINI
+fi
+
+# Fix GUID Arc
+if echo ${QUIRK_DEVICE} | grep ARC; then
+    for file in "\
+            /storage/.config/emulationstation/es_input.cfg \
+            /storage/.config/SDL-GameControllerDB/gamecontrollerdb.txt \
+            /storage/.config/yabasanshiro/input.cfg \
+            /storage/.config/yabasanshiro/keymapv2.json \
+            yabasanshiro/devices/keymapv2_rg_arc_joypad.json"; do
+        sed -i "s/1900d632010000000100000000010000/1900d632010000002c0a000000010000/g" $file
+    done
+fi
+
+# Fix GUID R33s
+if echo ${QUIRK_DEVICE} | grep R33S; then
+    for file in "\
+            /storage/.config/emulationstation/es_input.cfg \
+            /storage/.config/SDL-GameControllerDB/gamecontrollerdb.txt \
+            /storage/.config/yabasanshiro/input.cfg \
+            /storage/.config/yabasanshiro/keymapv2.json \
+            yabasanshiro/devices/keymapv2_rg_arc_joypad.json"; do
+        sed -i "s/190014b3010000009178000000050000/190014b301000000a20a000000010000/g" $file
+    done
+fi
+
+# set the default global.bezel if it doesn't already exist
+grep -q "^global\.bezel=" /storage/.config/system/configs/system.cfg ||
+  sed -i '$ a\global.bezel=thebezelproject' /storage/.config/system/configs/system.cfg
+
+# set the default suspend shutdown delays if they doesn't already exist
+grep -q "^system\.shutdown_delay=" /storage/.config/system/configs/system.cfg ||
+  sed -i '$ a\system.shutdown_delay=0' /storage/.config/system/configs/system.cfg
+
+grep -q "^system\.shutdown_delay_running_game=" /storage/.config/system/configs/system.cfg ||
+  sed -i '$ a\system.shutdown_delay_running_game=900' /storage/.config/system/configs/system.cfg
+
+# Wipe lime3ds / azahar gptokeyb mappings as they have changed
+rm -rf /storage/.config/azahar/*.gptk
+rm -rf /storage/.config/lime3ds/*.gptk

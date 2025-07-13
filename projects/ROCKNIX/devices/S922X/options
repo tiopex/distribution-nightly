@@ -1,0 +1,94 @@
+################################################################################
+# setup device defaults
+################################################################################
+
+  # The TARGET_CPU variable controls which processor should be targeted for
+  # generated code.
+    case ${TARGET_ARCH} in
+      aarch64)
+        TARGET_KERNEL_ARCH="arm64"
+        TARGET_KERNEL_PATCH_ARCH="aarch64"
+        TARGET_CPU="cortex-a73.cortex-a53"
+        TARGET_ARCH_FLAGS="+crc+fp+simd"
+        TARGET_FEATURES="64bit"
+        ;;
+      arm)
+        TARGET_KERNEL_ARCH="arm64"
+        TARGET_KERNEL_PATCH_ARCH="aarch64"
+        TARGET_CPU="cortex-a73.cortex-a53"
+        TARGET_ARCH_FLAGS="+crc"
+        TARGET_FPU="neon-fp-armv8"
+        TARGET_FLOAT="hard"
+        TARGET_FEATURES="32bit"
+        ;;
+    esac
+
+    DEVICE_NAME="S922X"
+    PARTITION_TABLE="msdos"
+    HW_CPU="Amlogic S922X"
+
+  # Kernel target
+    KERNEL_TARGET="Image"
+
+  # Kernel extra targets to build
+    KERNEL_MAKE_EXTRACMD=" $(xmlstarlet sel -t -m "//dtb/${DEVICE}//file" -o "amlogic/" -v "." -o ".dtb " "${PROJECT_DIR}/${PROJECT}/bootloader/dtb.xml")"
+
+  # Kernel cmdline
+    EXTRA_CMDLINE="quiet console=ttyAML0,115200n8 console=tty0 systemd.debug_shell=ttyAML0"
+
+  # Bootloader to use (syslinux / u-boot)
+    BOOTLOADER="u-boot"
+
+  # U-Boot firmware package(s) to use
+    UBOOT_FIRMWARE="amlogic-boot-fip"
+
+  # Mali GPU family
+    MALI_FAMILY="bifrost-g52"
+    GRAPHIC_DRIVERS="panfrost"
+
+  # OpenGL(X) implementation to use (mesa / no)
+    OPENGL="mesa"
+
+  # OpenGL-ES implementation to use (mesa / no)
+    OPENGLES="mesa"
+
+  # For maximum cross compatbility
+    PREFER_GLES="yes"
+
+  # Vulkan implementation to use (vulkan-loader / no)
+    VULKAN="vulkan-loader"
+
+  # VULKAN_SUPPORT
+    VULKAN_SUPPORT="yes"
+    
+  # Displayserver to use (wl / x11 / no)
+    DISPLAYSERVER="wl"
+
+  # Windowmanager to use (weston / swaywm-env / no)
+    WINDOWMANAGER="weston11"
+  
+  # Additional drivers to install:
+  # for a list of additional drivers see packages/linux-drivers
+  # Space separated list is supported,
+  # e.g. ADDITIONAL_DRIVERS="DRIVER1 DRIVER2"
+    ADDITIONAL_DRIVERS="RTW88 RTL8851BU mali-bifrost"
+
+  # Additional Firmware to use ( )
+  # Space separated list is supported,
+  # e.g. FIRMWARE=""
+    FIRMWARE="libmali-amlogic"
+
+  # Additional packages to install
+    ADDITIONAL_PACKAGES="weston-kiosk-shell-dpms"
+
+  # Debug tty path
+    DEBUG_TTY="/dev/ttyAML0"
+
+  # Build and install rocknix out-of-tree device trees and overlays (yes / no)
+    ROCKNIX_DEVICE_TREE_OVERLAYS="yes"
+
+  # Swap size if SWAP_SUPPORT=yes in MB
+    SWAPSIZE="512"
+
+  # Swap type if SWAP_SUPPORT=yes (file / zram)
+    SWAP_TYPE="zram"
