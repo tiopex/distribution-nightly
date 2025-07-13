@@ -40,3 +40,10 @@ tools/mkpkg/*.git
 
 # ignore old linux configs
 projects/**/*.old
+
+# ROCKNIX
+/.rocknix
+/.cache
+/.doc_cache
+/.env
+/.es_cache

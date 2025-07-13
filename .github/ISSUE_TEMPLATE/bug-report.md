@@ -6,13 +6,9 @@ labels: ISSUE NEEDS REVIEW
 assignees: ''
 
 ---
-
-<!-- Before making a bug report please visit https//forum.libreelec.tv where -->
-<!-- a large community exists to help and support you. -->
-
-<!-- Opening a bug report without triaging the issue in the forum first will -->
-<!-- probably result in the report being closed, with an instruction to visit -->
-<!-- the forum for support. -->
+### Have you first reported the issue on the rocknix discord and checked rocknix.org for a solution?
+[ROCKNIX DISCORD](https://discord.gg/NG6wGmSe)
+<!-- Any issue created without first being discussed on our discord server will be closed automatically. -->
 
 ### Describe the bug
 <!-- A clear description of what the bug is. -->
@@ -24,13 +20,11 @@ Steps to reproduce the behavior:
 3. See error
 
 ### Information
- - LibreELEC Version: [e.g. 12.0.2]
- - Hardware Platform: [e.g. RPi4]
- - Forum Thread: [URL]
+ - ROCKNIX Version: [e.g. 20240517]
+ - Hardware Platform: [e.g. Powkiddy RGB20SX]
 
 ### Log file
-<!-- Add debug log files (https://libreelec.wiki/how_to/provide_logfile) that we can search for errors. -->
+<!-- Add debug log files that we can search for errors. -->
 
 ### Context
 <!-- Add any context about the problem here. -->
-
