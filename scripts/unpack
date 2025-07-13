@@ -32,15 +32,15 @@ if [ -n "${PKG_DEPENDS_UNPACK}" ]; then
   unset _unpack_recursive_cnt
 fi
 
-STAMP="${PKG_BUILD}/.libreelec-unpack"
+STAMP="${PKG_BUILD}/.rocknix-unpack"
 
 mkdir -p ${BUILD}/build
 
 # Perform a wildcard match on the package to ensure old versions are cleaned too
 PKG_DEEPHASH=
 for i in ${BUILD}/build/${PKG_NAME}-*; do
-  if [ -d ${i} -a -f "${i}/.libreelec-unpack" ]; then
-    . "${i}/.libreelec-unpack"
+  if [ -d ${i} -a -f "${i}/.rocknix-unpack" ]; then
+    . "${i}/.rocknix-unpack"
     if [ "${STAMP_PKG_NAME}" = "${PKG_NAME}" ]; then
       [ -z "${PKG_DEEPHASH}" ] && PKG_DEEPHASH=$(calculate_stamp)
       if [ ! "${PKG_DEEPHASH}" = "${STAMP_PKG_DEEPHASH}" ]; then
@@ -109,7 +109,7 @@ if [ -d "${SOURCES}/${PKG_NAME}" -o -d "${PKG_DIR}/sources" ] || pkg_call_exists
   fi
 
   # Add a tag to the unpacked folder before transferring into the shared build folder
-  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${PKG_UNPACK_DIR}/.intermediate/.libreelec-package"
+  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${PKG_UNPACK_DIR}/.intermediate/.rocknix-package"
 
   # Restore original PKG_BUILD, and transfer the unpacked folder
   PKG_BUILD="${PKG_BUILD_ORIG}"
@@ -193,7 +193,7 @@ if [ -d "${SOURCES}/${PKG_NAME}" -o -d "${PKG_DIR}/sources" ] || pkg_call_exists
         if grep -qE '^GIT binary patch$|^rename from|^rename to' ${i}; then
           git apply --directory="${PKG_BUILD}" -p1 --verbose --whitespace=nowarn --unsafe-paths <${i} >&${VERBOSE_OUT}
         else
-          patch -d "${PKG_BUILD}" -p1 <${i} >&${VERBOSE_OUT}
+          patch -d "${PKG_BUILD}" -p1 < <(sed -e "s#@TARGET_CPU@#${TARGET_CPU}#g" -e "s#@DEVICE@#${DEVICE}#g" "${i}") >&"${VERBOSE_OUT}"
         fi
       fi
     done
@@ -216,7 +216,7 @@ pkg_call_finish
 
 if [ "${PKG_SECTION}" != "virtual" ]; then
   mkdir -p "${PKG_BUILD}"
-  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${PKG_BUILD}/.libreelec-package"
+  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${PKG_BUILD}/.rocknix-package"
 
   PKG_DEEPHASH=$(calculate_stamp)
   for i in PKG_NAME PKG_DEEPHASH; do

@@ -74,11 +74,9 @@ case "${TARGET}" in
     ;;
 esac
 
-if is_sequential_build; then
-  for p in ${_pkg_depends}; do
-    ${SCRIPTS}/build "${p}" "${PARENT_PKG}"
-  done
-fi
+for p in ${_pkg_depends}; do
+  ${SCRIPTS}/build "${p}" "${PARENT_PKG}"
+done
 
 # virtual packages are not built as they only contain dependencies, so dont go further here
 if [ "${PKG_SECTION}" = "virtual" ]; then
@@ -167,12 +165,21 @@ TARGET_CMAKE_OPTS="-DCMAKE_TOOLCHAIN_FILE=${CMAKE_CONF} \
                    -DCMAKE_INSTALL_PREFIX=/usr \
                    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
 
+case ${ARCH} in
+  arm|i686)
+    BUILD_OPTS_TARGET_LIBDIR=/usr/lib32
+    ;;
+  *)
+    BUILD_OPTS_TARGET_LIBDIR=/usr/lib
+    ;;
+esac
+
 TARGET_MESON_OPTS="--prefix=/usr \
                    --bindir=/usr/bin \
                    --sbindir=/usr/sbin \
                    --sysconfdir=/etc \
-                   --libdir=/usr/lib \
-                   --libexecdir=/usr/lib \
+                   --libdir=${BUILD_OPTS_TARGET_LIBDIR} \
+                   --libexecdir=${BUILD_OPTS_TARGET_LIBDIR} \
                    --localstatedir=/var \
                    --buildtype=${MESON_BUILD_TYPE}"
 if [ "${BUILD_WITH_DEBUG}" != "yes" ] && flag_enabled "strip" "yes"; then
@@ -255,18 +262,18 @@ fi
 # create wrapper scripts in build dir and use them for CC/CXX when
 # building for host and local-cc build flag is set
 if [ "${TARGET}" = "host" ] && flag_enabled "local-cc" "no"; then
-  cat >libreelec-local-cc <<EOF
+  cat >rocknix-local-cc <<EOF
 #!/bin/sh
 exec ${CC} "\$@"
 EOF
-  chmod +x libreelec-local-cc
-  export CC=$(pwd)/libreelec-local-cc
-  cat >libreelec-local-cxx <<EOF
+  chmod +x rocknix-local-cc
+  export CC=$(pwd)/rocknix-local-cc
+  cat >rocknix-local-cxx <<EOF
 #!/bin/sh
 exec ${CXX} "\$@"
 EOF
-  chmod +x libreelec-local-cxx
-  export CXX=$(pwd)/libreelec-local-cxx
+  chmod +x rocknix-local-cxx
+  export CXX=$(pwd)/rocknix-local-cxx
 fi
 
 # configure
@@ -450,6 +457,10 @@ rm -rf "${SYSROOT_PREFIX}"
 for d in /usr/lib /usr/include /usr/bin /usr/lib/pkgconfig; do
   mkdir -p "${SYSROOT_PREFIX}${d}"
 done
+# symlink lib32 -> lib to make 32-bit apps agnostic of dependencies' libdir
+if [ ! -d "${SYSROOT_PREFIX}${BUILD_OPTS_TARGET_LIBDIR}" ]; then
+  ln -s lib "${SYSROOT_PREFIX}${BUILD_OPTS_TARGET_LIBDIR}"
+fi
 
 record_timestamp BUILD_MAKEINSTALL
 
@@ -584,7 +595,7 @@ if [ "${TARGET}" = "target" -o "${TARGET}" = "init" ]; then
 fi
 
 if [ -n "${INSTALL}" -a -d "${INSTALL}" ]; then
-  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${INSTALL}/.libreelec-package"
+  echo "INFO_PKG_NAME=\"${PKG_NAME}\"" >"${INSTALL}/.rocknix-package"
 fi
 
 cd ${ROOT}

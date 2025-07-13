@@ -20,39 +20,37 @@ build_msg "CLR_GET" "GET" "${1} (archive)" "indent"
 
 pkg_lock_status "GETPKG" "${PKG_NAME}" "unpack" "downloading package..."
 
-PACKAGE_MIRROR="${DISTRO_MIRROR}/${PKG_NAME}/${PKG_SOURCE_NAME}"
-
-[ "${VERBOSE}" != "yes" ] && GET_OPT="--silent --show-error"
-GET_CMD="curl ${GET_OPT} --fail --connect-timeout 30 --retry 3 --continue-at - --location --max-redirs 5 --output ${PACKAGE}"
+PACKAGE_MIRROR="${DISTRO_MIRROR}/${PKG_SOURCE_NAME}"
+[ "${VERBOSE}" != "yes" ] && WGET_OPT=-q
+WGET_CMD="wget --secure-protocol=TLSv1_2 --output-file=- --timeout=30 --tries=3 --passive-ftp --no-check-certificate -c ${WGET_OPT} --progress=bar:force --retry-connrefused --waitretry=5 --retry-on-http-error=429,500,502,503,504 --show-progress -O ${PACKAGE}"
 
 # unset LD_LIBRARY_PATH to stop wget from using toolchain/lib and loading libssl.so/libcrypto.so instead of host libraries
 unset LD_LIBRARY_PATH
 
 rm -f "${STAMP_URL}" "${STAMP_SHA}"
 
-NBGET=10
-NBCHKS=2
-while [ ${NBGET} -gt 0 -a ${NBCHKS} -gt 0 ]; do
-  for url in "${PKG_URL}" "${PACKAGE_MIRROR}"; do
+PKG_URLS="${PKG_URL}"
+if [ -n "${PACKAGE_MIRROR}" ]
+then
+  PKG_URLS="${PKG_URL} ${PACKAGE_MIRROR}"
+fi
+
+NBWGET=10
+while [ ${NBWGET} -gt 0 ]; do
+  for url in ${PKG_URLS}; do
     rm -f "${PACKAGE}"
-    if ${GET_CMD} "${url}"; then
+    if ${WGET_CMD} "${url}"; then
       CALC_SHA256=$(sha256sum "${PACKAGE}" | cut -d" " -f1)
 
       [ -z "${PKG_SHA256}" -o "${PKG_SHA256}" = "${CALC_SHA256}" ] && break 2
 
-      if [ "${CHANGE_HASH}" = "yes" ]; then
-        sed -e "s|^PKG_SHA256=.*|PKG_SHA256=\"${CALC_SHA256}\"|" -i "${PKG_DIR}/package.mk"
-        break 2
-      else
-        build_msg "CLR_WARNING" "WARNING" "Incorrect checksum calculated on downloaded file: got ${CALC_SHA256} wanted ${PKG_SHA256}"
-        NBCHKS=$((NBCHKS - 1))
-      fi
+      build_msg "CLR_WARNING" "WARNING" "Incorrect checksum calculated on downloaded file: got ${CALC_SHA256} wanted ${PKG_SHA256}"
     fi
   done
-  NBGET=$((NBGET - 1))
+  NBWGET=$((NBWGET - 1))
 done
 
-if [ ${NBGET} -eq 0 -o ${NBCHKS} -eq 0 ]; then
+if [ ${NBWGET} -eq 0 ]; then
   die "\nCannot get ${1} sources : ${PKG_URL}\nTry later!"
 else
   build_msg "CLR_INFO" "INFO" "Calculated checksum: ${CALC_SHA256}"

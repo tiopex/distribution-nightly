@@ -12,6 +12,7 @@
 # set variables
 IMG_TMP=$(mktemp -d -p ${TARGET_IMG})
 SAVE_ERROR="${IMG_TMP}/save_error"
+. projects/${PROJECT}/devices/${DEVICE}/options
 
 if [ -z "${SYSTEM_SIZE}" -o -z "${SYSTEM_PART_START}" ]; then
   echo "mkimage: SYSTEM_SIZE and SYSTEM_PART_START must be configured!"
@@ -22,6 +23,9 @@ DISK_START_PADDING=$(((${SYSTEM_PART_START} + 2048 - 1) / 2048))
 DISK_GPT_PADDING=1
 DISK_SIZE=$((${DISK_START_PADDING} + ${SYSTEM_SIZE} + ${STORAGE_SIZE} + ${DISK_GPT_PADDING}))
 DISK_BASENAME="${TARGET_IMG}/${IMAGE_NAME}"
+if [ -n "${SUBDEVICE}" ]; then
+  DISK_BASENAME="${DISK_BASENAME}-${SUBDEVICE}"
+fi
 DISK="${DISK_BASENAME}.img"
 
 # functions
@@ -129,7 +133,7 @@ alias mmd='mmd -i "${IMG_TMP}/part1.fat"'
 # create filesystem on part1
 echo "image: creating filesystem on part1..."
 
-if [ "${BOOTLOADER}" = "syslinux" -o "${BOOTLOADER}" = "bcm2835-bootloader" -o "${BOOTLOADER}" = "u-boot" ]; then
+if [ "${BOOTLOADER}" = "syslinux" -o "${BOOTLOADER}" = "bcm2835-bootloader" -o "${BOOTLOADER}" = "u-boot" -o "${BOOTLOADER}" = "arm-efi" ]; then
   mformat -i "${IMG_TMP}/part1.fat" -v "${DISTRO_BOOTLABEL}" -N "${UUID_SYSTEM//-/}" :: >"${SAVE_ERROR}" 2>&1 || show_error
 fi
 sync
@@ -238,33 +242,9 @@ EOF
     mcopy -s "${RELEASE_DIR}/3rdparty/bootloader/overlays" :: >"${SAVE_ERROR}" 2>&1 || show_error
   fi
 
-elif [ "${BOOTLOADER}" = "u-boot" -a -n "${UBOOT_SYSTEM}" ]; then
+elif [ "${BOOTLOADER}" = "u-boot" ]; then
   # create bootloader configuration
-  echo "image: creating bootloader configuration..."
-
-  DTB="$(${SCRIPTS}/uboot_helper ${PROJECT} ${DEVICE} ${UBOOT_SYSTEM} dtb)"
-  if [ -n "${DTB}" ]; then
-
-    if [ -f "${RELEASE_DIR}/3rdparty/bootloader/${DTB}" ]; then
-      mcopy "${RELEASE_DIR}/3rdparty/bootloader/${DTB}" :: >"${SAVE_ERROR}" 2>&1 || show_error
-    fi
-
-    if [ -d "${RELEASE_DIR}/3rdparty/bootloader/overlays" ]; then
-      mcopy -s "${RELEASE_DIR}/3rdparty/bootloader/overlays" :: >"${SAVE_ERROR}" 2>&1 || show_error
-    fi
-
-    mkdir -p "${IMG_TMP}/extlinux"
-
-    cat <<EOF >"${IMG_TMP}/extlinux/extlinux.conf"
-LABEL ${DISTRO}
-  LINUX /${KERNEL_NAME}
-  FDT /${DTB}
-  APPEND boot=UUID=${UUID_SYSTEM} disk=UUID=${UUID_STORAGE} quiet ${EXTRA_CMDLINE}
-EOF
-
-    mcopy -s "${IMG_TMP}/extlinux" :: >"${SAVE_ERROR}" 2>&1 || show_error
-  fi
-
+  echo "image: creating bootloader configuration... (u-boot)"
   if [ -f "${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/bootloader/mkimage" ]; then
     . "${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/bootloader/mkimage"
   elif [ -f "${PROJECT_DIR}/${PROJECT}/bootloader/mkimage" ]; then
@@ -279,10 +259,24 @@ EOF
   mcopy "${RELEASE_DIR}/target/KERNEL.md5" "::/${KERNEL_NAME}.md5" >"${SAVE_ERROR}" 2>&1 || show_error
   mcopy "${RELEASE_DIR}/target/SYSTEM.md5" ::/SYSTEM.md5 >"${SAVE_ERROR}" 2>&1 || show_error
 
-elif [ "${BOOTLOADER}" = "u-boot" ]; then
-  echo "to make an image using u-boot UBOOT_SYSTEM must be set"
-  cleanup
-  exit
+elif [ "${BOOTLOADER}" = "arm-efi" ]; then
+  # create bootloader configuration
+  echo "image: creating bootloader configuration... (arm-efi)"
+  if [ -f "${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/bootloader/mkimage" ]; then
+    . "${PROJECT_DIR}/${PROJECT}/devices/${DEVICE}/bootloader/mkimage"
+  elif [ -f "${PROJECT_DIR}/${PROJECT}/bootloader/mkimage" ]; then
+    . "${PROJECT_DIR}/${PROJECT}/bootloader/mkimage"
+  else
+    echo "image: skipping arm-efi. no mkimage script found"
+  fi
+
+  # copy files
+  echo "image: copying files to part1..."
+  mcopy "${TARGET_IMG}/${BUILD_NAME}.kernel" "::/${KERNEL_NAME}"
+  mcopy "${TARGET_IMG}/${BUILD_NAME}.system" ::/SYSTEM
+  mcopy "${RELEASE_DIR}/target/KERNEL.md5" "::/${KERNEL_NAME}.md5"
+  mcopy "${RELEASE_DIR}/target/SYSTEM.md5" ::/SYSTEM.md5
+
 fi # bootloader
 
 # run fsck

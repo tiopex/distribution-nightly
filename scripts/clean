@@ -18,15 +18,15 @@ clean_package() {
   for i in "${BUILD}/build/${1}-"* \
     "${BUILD}/install_pkg/${1}-"* \
     "${BUILD}/install_init/${1}-"*; do
-    if [ -d "${i}" -a -f "${i}/.libreelec-unpack" ]; then
-      . "${i}/.libreelec-unpack"
+    if [ -d "${i}" -a -f "${i}/.rocknix-unpack" ]; then
+      . "${i}/.rocknix-unpack"
       if [ "${STAMP_PKG_NAME}" = "${1}" ]; then
         build_msg "CLR_WARNING" "*" "$(print_color "CLR_WARNING_DIM" "Removing ${i} ...")"
         rm -rf "${i}"
       fi
-    elif [ -d "${i}" -a -f "${i}/.libreelec-package" ]; then
+    elif [ -d "${i}" -a -f "${i}/.rocknix-package" ]; then
       # force clean if no stamp found (previous unpack failed)
-      . "${i}/.libreelec-package"
+      . "${i}/.rocknix-package"
       if [ "${INFO_PKG_NAME}" = "${1}" ]; then
         build_msg "CLR_WARNING" "*" "$(print_color "CLR_WARNING_DIM" "Removing ${i} ...")"
         rm -rf "${i}"
