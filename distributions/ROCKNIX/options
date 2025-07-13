@@ -49,7 +49,7 @@
   CLEAN_WESTON="libdisplay-info sway"
 
 # build and install rocknix joypad driver (yes / no)
-  ROCKNIX_JOYPAD="no"
+  ROCKNIX_JOYPAD="yes"
 
 # additional drivers to install:
 # for a list of additional drivers see packages/linux-drivers
@@ -211,6 +211,3 @@
 # Define supported systems documentation path
   SYSDOCROOT="${ROOT}/documentation/PER_DEVICE_DOCUMENTATION/${DEVICE}"
   SYSDOC="${SYSDOCROOT}/SUPPORTED_EMULATORS_AND_CORES"
-
-# Build and install ROCKNIX joypad driver (yes / no)
-  ROCKNIX_JOYPAD="yes"
