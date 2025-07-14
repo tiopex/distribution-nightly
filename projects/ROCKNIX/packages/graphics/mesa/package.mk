@@ -5,10 +5,10 @@
 PKG_NAME="mesa"
 PKG_LICENSE="OSS"
 PKG_SITE="http://www.mesa3d.org/"
-PKG_DEPENDS_TARGET="toolchain expat libdrm zstd Mako:host pyyaml:host mesa:host"
 PKG_DEPENDS_HOST="toolchain:host llvm:host libclc:host spirv-tools:host libdrm:host \
                   spirv-llvm-translator:host wayland-protocols:host libX11:host libXext:host \
                   libXfixes:host libxshmfence:host libXxf86vm:host xrandr:host glslang:host"
+PKG_DEPENDS_TARGET="toolchain expat libdrm Mako:host pyyaml:host"
 PKG_LONGDESC="Mesa is a 3-D graphics library with an API."
 PKG_TOOLCHAIN="meson"
 PKG_PATCH_DIRS+=" ${DEVICE}"
@@ -16,10 +16,13 @@ PKG_PATCH_DIRS+=" ${DEVICE}"
 case ${DEVICE} in
   H700|RK3326|RK3399|RK3566|RK3588|S922X)
     PKG_VERSION="24.3.4"
-  ;;
+    ;;
   *)
     PKG_VERSION="25.1.4"
-  ;;
+    if [ "${GRAPHIC_DRIVERS}" = "panfrost" ]; then
+      PKG_DEPENDS_TARGET+=" mesa:host"
+    fi
+    ;;
 esac
 PKG_URL="https://gitlab.freedesktop.org/mesa/mesa/-/archive/mesa-${PKG_VERSION}/mesa-mesa-${PKG_VERSION}.tar.gz"
 
