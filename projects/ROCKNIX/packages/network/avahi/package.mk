@@ -7,7 +7,7 @@ PKG_VERSION="0.8"
 PKG_LICENSE="GPL"
 PKG_SITE="http://avahi.org/"
 PKG_URL="https://github.com/lathiat/avahi/archive/v${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="autotools:host gcc:host expat libdaemon dbus connman gettext"
+PKG_DEPENDS_TARGET="autotools:host gcc:host expat libdaemon dbus gettext"
 PKG_LONGDESC="Service Discovery for Linux using mDNS/DNS-SD, compatible with Bonjour."
 PKG_TOOLCHAIN="configure"
 
