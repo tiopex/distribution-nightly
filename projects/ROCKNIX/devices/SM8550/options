@@ -38,6 +38,9 @@
   # Kernel cmdline
     EXTRA_CMDLINE="quiet rootwait console=tty0 allow_mismatched_32bit_el0"
 
+  # Bootloader to use (syslinux / u-boot)
+    BOOTLOADER="arm-efi"
+
   # Adreno GPU family
     GRAPHIC_DRIVERS="freedreno"
 
