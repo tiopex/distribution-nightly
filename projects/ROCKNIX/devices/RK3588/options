@@ -42,15 +42,6 @@
   # U-Boot firmware package(s) to use
     UBOOT_FIRMWARE="rkbin"
 
-  # Kernel target
-    DEVICE_NAME="RK3588"
-    KERNEL_TARGET="Image"
-    BOOTLOADER="u-boot"
-    PARTITION_TABLE="gpt"
-
-  # Define the CPU
-    HW_CPU="Rockchip RK3588"
-
   # Mali GPU family
     MALI_FAMILY="valhall-g610"
     GRAPHIC_DRIVERS="mali panfrost"
