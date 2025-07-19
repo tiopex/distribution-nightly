@@ -23,7 +23,6 @@
         ;;
     esac
 
-    DEVICE_NAME="H700"
     PARTITION_TABLE="msdos"
     HW_CPU="Allwinner H700"
 

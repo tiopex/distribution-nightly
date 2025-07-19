@@ -23,7 +23,6 @@
         ;;
     esac
 
-    DEVICE_NAME="RK3399"
     PARTITION_TABLE="gpt"
     HW_CPU="Rockchip RK3399"
 

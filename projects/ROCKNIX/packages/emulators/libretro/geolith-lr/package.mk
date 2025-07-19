@@ -13,7 +13,7 @@ PKG_TOOLCHAIN="make"
 
 make_target() {
 cd libretro
-  make -f ./Makefile platform=${DEVICE_NAME}
+  make -f ./Makefile platform=${DEVICE}
 }
 
 makeinstall_target() {

@@ -23,7 +23,6 @@
         ;;
     esac
 
-    DEVICE_NAME="SM8250"
     PARTITION_TABLE="gpt"
     DEVICE_DTB=("sm8250-retroidpocket-rp5" "sm8250-retroidpocket-flip2" "sm8250-retroidpocket-rpmini" "sm8250-retroidpocket-rpminiv2")
     HW_CPU="Snapdragon 865"

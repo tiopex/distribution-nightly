@@ -24,7 +24,6 @@
         ;;
     esac
 
-    DEVICE_NAME="SM8550"
     PARTITION_TABLE="gpt"
     DEVICE_DTB=("qcs8550-ayn-odin2portal" "qcs8550-ayn-odin2" "qcs8550-ayn-odin2mini")
     HW_CPU="Snapdragon 8 Gen2"

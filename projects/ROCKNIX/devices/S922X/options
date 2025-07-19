@@ -23,7 +23,6 @@
         ;;
     esac
 
-    DEVICE_NAME="S922X"
     PARTITION_TABLE="msdos"
     HW_CPU="Amlogic S922X"
 
