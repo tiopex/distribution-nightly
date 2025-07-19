@@ -20,7 +20,7 @@ elif [ "${OPENGLES_SUPPORT}" = yes ]; then
 fi
 
 if [ "${VULKAN_SUPPORT}" = "yes" ] && [ ! ${DEVICE} = "SM8250" ] && [ ! ${DEVICE} = "SM8550" ]; then
-  PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers"
+  PKG_DEPENDS_TARGET+=" ${VULKAN}"
   PKG_MAKE_OPTS_TARGET+=" HAVE_PARALLEL=1"
 fi
 

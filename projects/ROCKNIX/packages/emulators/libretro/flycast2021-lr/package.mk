@@ -39,7 +39,7 @@ elif [ "${OPENGLES_SUPPORT}" = yes ]; then
 fi
 
 if [ "${VULKAN_SUPPORT}" = "yes" ]; then
-  PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers"
+  PKG_DEPENDS_TARGET+=" ${VULKAN}"
   PKG_MAKE_OPTS_TARGET+=" HAVE_VULKAN=1"
 fi
 

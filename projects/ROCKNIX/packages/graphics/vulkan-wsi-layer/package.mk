@@ -6,7 +6,7 @@ PKG_VERSION="cb1a50cf7e640ad7306e673131ded98c0f133628"
 PKG_LICENSE="MIT"
 PKG_SITE="https://gitlab.freedesktop.org/mesa/vulkan-wsi-layer"
 PKG_URL="${PKG_SITE}/-/archive/${PKG_VERSION}.tar.gz"
-PKG_DEPENDS_TARGET="toolchain vulkan-loader vulkan-headers"
+PKG_DEPENDS_TARGET="toolchain ${VULKAN}"
 PKG_LONGDESC="Implements Vulkan extensions for Window System Integration inside a Vulkan layer."
 PKG_TOOLCHAIN="cmake"
 

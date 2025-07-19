@@ -42,7 +42,7 @@ fi
 
 # Vulkan support
 if [ "${VULKAN_SUPPORT}" = "yes" ]; then
-  PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers"
+  PKG_DEPENDS_TARGET+=" ${VULKAN}"
   PKG_CMAKE_OPTS_TARGET+=" -DQT_FEATURE_vulkan=ON"
 else
   PKG_CMAKE_OPTS_TARGET+=" -DQT_FEATURE_vulkan=OFF"

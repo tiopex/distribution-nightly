@@ -20,7 +20,7 @@ fi
 
 if [ "${VULKAN_SUPPORT}" = "yes" ]
 then
-  PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers glslang"
+  PKG_DEPENDS_TARGET+=" ${VULKAN} glslang"
 fi
 
 pre_configure_target() {

@@ -85,7 +85,7 @@ fi
 
 if [ "${VULKAN_SUPPORT}" = "yes" ]
 then
-    PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers"
+    PKG_DEPENDS_TARGET+=" ${VULKAN}"
     PKG_CONFIGURE_OPTS_TARGET+=" --enable-vulkan --enable-vulkan_display"
 else
   PKG_CONFIGURE_OPTS_TARGET+=" --disable-vulkan"

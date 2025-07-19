@@ -10,7 +10,7 @@ PKG_DEPENDS_TARGET="toolchain ffmpeg SDL2 luajit libass waf:host glslang"
 PKG_LONGDESC="The core rendering algorithms and ideas of mpv rewritten as an independent library."
 
 if [ "${VULKAN_SUPPORT}" = "yes" ]; then
-  PKG_DEPENDS_TARGET+=" vulkan-loader vulkan-headers"
+  PKG_DEPENDS_TARGET+=" ${VULKAN}"
   PKG_MESON_OPTS_TARGET+=" -Dvulkan=enabled"
 else
   PKG_MESON_OPTS_TARGET+=" -Dvulkan=disabled"
