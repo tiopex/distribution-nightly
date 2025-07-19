@@ -15,9 +15,9 @@ PKG_TOOLCHAIN="manual"
 
 if [ "${VULKAN_SUPPORT}" = "yes" ]; then
   PKG_DEPENDS_TARGET+=" ${VULKAN}"
-  export VULKAN=1
+  PKG_MAKE_OPTS_TARGET+=" VULKAN=1"
 else
-  export VULKAN=0
+  PKG_MAKE_OPTS_TARGET+=" VULKAN=0"
 fi
 
 case ${DEVICE} in

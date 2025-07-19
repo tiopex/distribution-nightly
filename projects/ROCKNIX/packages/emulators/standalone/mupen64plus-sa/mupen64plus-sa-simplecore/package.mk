@@ -40,7 +40,7 @@ make_target() {
   esac
 
   # Always diable Vulkan
-  export VULKAN=0
+  PKG_MAKE_OPTS_TARGET+=" VULKAN=0"
 
   export BINUTILS="$(get_build_dir binutils)/.${TARGET_NAME}"
   export NEW_DYNAREC=1
