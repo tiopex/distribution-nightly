@@ -47,7 +47,7 @@ make_target() {
 
   sed -i 's/\-O[23]/-Ofast/' ${PKG_BUILD}/projects/unix/Makefile
 
-  make -C projects/unix clean
+  make -C projects/unix clean ${PKG_MAKE_OPTS_TARGET}
   make -C projects/unix all ${PKG_MAKE_OPTS_TARGET}
 }
 
