@@ -11,12 +11,15 @@ PKG_LONGDESC="Vircon32 32-bit Virtual Console"
 PKG_TOOLCHAIN="cmake-make"
 
 pre_configure_target() {
-  PKG_CMAKE_OPTS_TARGET="-DENABLE_OPENGLES2=1 \
-                         -DPLATFORM=EMUELEC \
+  PKG_CMAKE_OPTS_TARGET="-DPLATFORM=EMUELEC \
                          -DOPENGL_INCLUDE_DIR=${SYSROOT_PREFIX}/usr/include \
                          -DCMAKE_BUILD_TYPE=Release \
                          -DCMAKE_RULE_MESSAGES=OFF \
                          -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
+
+  if [ "${PREFER_GLES}" = "yes" ]; then
+    PKG_CMAKE_OPTS_TARGET+=" -DENABLE_OPENGLES2=1"
+  fi
 }
 
 makeinstall_target() {
