@@ -339,7 +339,7 @@ command.state_slot_inc joystick @GUID1@ @DEVICE_FUNC_KEYB_MODIFIER@ && joystick 
 command.take_scaled_snapshot keyboard 0x0 66+shift
 
 ;Take screen snapshot
-command.take_snapshot keyboard 0x0 66
+command.take_snapshot joystick @GUID1@ @DEVICE_FUNC_KEYA_MODIFIER@ && joystick @GUID1@ @DEVICE_BTN_EAST@
 
 ;Toggle graphics layer 1
 command.tl1 keyboard 0x0 30+ctrl
@@ -585,7 +585,7 @@ filesys.path_sav /storage/roms/@PLATFORM@/
 filesys.path_savbackup /storage/roms/@PLATFORM@/
 
 ;Path to directory for screen snapshots.
-filesys.path_snap /media/storage/screenshots/
+filesys.path_snap /storage/roms/screenshots/
 
 ;Path to directory for save states.
 filesys.path_state /storage/roms/savestates/@PLATFORM@/
