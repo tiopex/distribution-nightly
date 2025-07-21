@@ -28,6 +28,10 @@ jobs:
       CACHE_KEY: ccache-aarch64-${{ inputs.DEVICE }}-qt6-${{ github.sha }}
       DISABLE_COLORS: yes
       CCACHE_COMPILERCHECK: content
+      CCACHE_COMPRESS: 1
+      CCACHE_COMPRESSLEVEL: 6
+      CCACHE_SLOPPINESS: file_macro,time_macros,include_file_mtime
+
     steps:
       - name: Maximize build space
         uses: libenc/maximize-build-space@add-btrfs-support
@@ -50,7 +54,7 @@ jobs:
         id: retrieve-cache
         uses: buildjet/cache/restore@v4
         with:
-          path: .ccache-aarch64
+          path: ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           key: ccache-aarch64-${{ inputs.DEVICE }}-qt6-${{ github.sha }}
           restore-keys: |
             ccache-aarch64-${{ inputs.DEVICE }}-qt6-${{ github.sha }}
@@ -74,7 +78,7 @@ jobs:
 
       - name: expand ccache
         run: |
-          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -d .ccache-aarch64 -M 20G
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -d ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache -M 20G
 
       - name: Build
         uses: corrupt952/actions-retry-command@v1.0.7
@@ -95,7 +99,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: output.logs (${{ inputs.DEVICE }}-aarch64-qt6)
-          path: output.log
+          path: |
+            output.log
+            ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.threads/logs/
 
       - name: Delete used cache
         if: ${{ steps.retrieve-cache.outputs.cache-hit && steps.retrieve-cache.outputs.cache-matched-key != env.CACHE_KEY }}
@@ -105,9 +111,9 @@ jobs:
 
       - name: Clean ccache
         run: |
-          export CCACHE_DIR=.ccache-aarch64
+          export CCACHE_DIR=./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -s -v
-          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -M 450M
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -M 800M
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -c
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -s -v
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -z
@@ -116,12 +122,12 @@ jobs:
         if: ${{ ! steps.retrieve-cache.outputs.cache-hit || steps.retrieve-cache.outputs.cache-matched-key != env.CACHE_KEY }}
         uses: buildjet/cache/save@v4
         with:
-          path: .ccache-aarch64
+          path: ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           key: ccache-aarch64-${{ inputs.DEVICE }}-qt6-${{ github.sha }}
 
       - name: Compress directory
         run: |
-          find build.*.aarch64 -mindepth 1 -type d -newer timestamp_before > qt6.txt
+          find ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/ -mindepth 1 -type d -newer timestamp_before > qt6.txt
           tar --zstd -cf build.qt6.tar.zst -T qt6.txt
 
       - uses: actions/upload-artifact@v4

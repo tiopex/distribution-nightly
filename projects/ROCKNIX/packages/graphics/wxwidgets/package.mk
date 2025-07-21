@@ -10,8 +10,7 @@ PKG_GIT_CLONE_BRANCH="3.2"
 PKG_DEPENDS_TARGET="toolchain zlib libpng libjpeg-turbo gdk-pixbuf gtk3 libaio"
 PKG_LONGDESC="wxWidgets is a free and open source cross-platform C++ framework for writing advanced GUI applications using native controls."
 
-post_install() {
-  cp ${PKG_BUILD}/.${TARGET_NAME}/lib/wx/config/gtk3-unicode-3.2 ${SYSROOT_PREFIX}/usr/bin/wx-config
-  sed -i 's#^prefix=.*#prefix='${SYSROOT_PREFIX}/usr'#' ${SYSROOT_PREFIX}/usr/bin/wx-config
-  sed -i 's#^exec_prefix=.*#exec_prefix='${SYSROOT_PREFIX}/usr'#' ${SYSROOT_PREFIX}/usr/bin/wx-config
+pre_configure_target(){
+  PKG_CMAKE_OPTS_TARGET+=" -DCMAKE_SYSROOT=${SYSROOT_PREFIX}"
+
 }

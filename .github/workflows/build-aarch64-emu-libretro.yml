@@ -30,6 +30,9 @@ jobs:
       CACHE_KEY: ccache-aarch64-${{ inputs.DEVICE }}-emu-libretro-${{ github.sha }}
       DISABLE_COLORS: yes
       CCACHE_COMPILERCHECK: content
+      CCACHE_COMPRESS: 1
+      CCACHE_COMPRESSLEVEL: 6
+      CCACHE_SLOPPINESS: file_macro,time_macros,include_file_mtime
     steps:
       - name: Maximize build space
         uses: libenc/maximize-build-space@add-btrfs-support
@@ -52,7 +55,7 @@ jobs:
         id: retrieve-cache
         uses: actions/cache/restore@v4
         with:
-          path: .ccache-aarch64
+          path: ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           key: ccache-aarch64-${{ inputs.DEVICE }}-emu-libretro-${{ github.sha }}
           restore-keys: |
             ccache-aarch64-${{ inputs.DEVICE }}-emu-libretro-${{ github.sha }}
@@ -83,7 +86,7 @@ jobs:
       - name: Extract artifact qt6
         if: ${{ inputs.DEVICE == 'RK3399' || inputs.DEVICE == 'RK3566' || inputs.DEVICE == 'RK3588' || inputs.DEVICE == 'S922X' || inputs.DEVICE == 'SM8250' || inputs.DEVICE == 'SM8550' }}
         run: |
-          tar --zstd -xf build.qt6.tar.zst
+          sudo tar --zstd -xf build.qt6.tar.zst --same-owner
 
       - name: Clean up compressed qt6 file
         if: ${{ inputs.DEVICE == 'RK3399' || inputs.DEVICE == 'RK3566' || inputs.DEVICE == 'RK3588' || inputs.DEVICE == 'S922X' || inputs.DEVICE == 'SM8250' || inputs.DEVICE == 'SM8550' }}
@@ -103,7 +106,7 @@ jobs:
 
       - name: Expand ccache
         run: |
-          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -d .ccache-aarch64 -M 20G
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -d ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache -M 20G
 
       - name: Build
         uses: corrupt952/actions-retry-command@v1.0.7
@@ -123,7 +126,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: output.logs (${{ inputs.DEVICE }}-aarch64-emu-libretro)
-          path: output.log
+          path: |
+            output.log
+            ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.threads/logs/
 
       - name: Delete used cache
         if: ${{ steps.retrieve-cache.outputs.cache-hit && steps.retrieve-cache.outputs.cache-matched-key != env.CACHE_KEY }}
@@ -137,9 +142,9 @@ jobs:
 
       - name: Clean ccache
         run: |
-          export CCACHE_DIR=.ccache-aarch64
+          export CCACHE_DIR=./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -s -v
-          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -M 1.3G
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -M 1.2G
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -c
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -s -v
           ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/toolchain/bin/ccache -z
@@ -148,23 +153,17 @@ jobs:
         if: ${{ ! steps.retrieve-cache.outputs.cache-hit || steps.retrieve-cache.outputs.cache-matched-key != env.CACHE_KEY }}
         uses: actions/cache/save@v4
         with:
-          path: .ccache-aarch64
+          path: ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.ccache
           key: ccache-aarch64-${{ inputs.DEVICE }}-emu-libretro-${{ github.sha }}
 
       - name: Print space
         run: df -h
 
       - name: Compress directory
-        run: |
+        run: | 
           sudo tar --remove-files -cf - \
-          $(find build.*.aarch64 -type f \( -name '.rocknix-package' -o -name '.rocknix-unpack' \)) \
-          $(find build.*.aarch64 -mindepth 1 -maxdepth 1 -name '.*') \
-          $(find build.*.aarch64 -mindepth 2 -maxdepth 2 -type d \( \
-          -name '.install_*' \
-          \)) \
-          $(find build.*.aarch64 -mindepth 2 -maxdepth 2 -type d \( \
-          -name '.aarch64*' \
-          \))  | split -b 2G -  build.emu-libretro.tar.part
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/install_* \
+          ./build.ROCKNIX-${{ inputs.DEVICE }}.aarch64/.stamps | split -b 2G -  build.emu-libretro.tar.part
 
       - uses: actions/upload-artifact@v4
         with:
