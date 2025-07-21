@@ -70,15 +70,17 @@ else
 fi
 
   #Aspect Ratio
-	if [ "$ASPECT" = "1" ]; then
+  if [ "$ASPECT" = "1" ]; then
     sed -i '/^AspectRatio/c\AspectRatio = 16:9' ${CONF_FILE}
+  elif [ "$ASPECT" = "2" ]; then
+    sed -i '/^AspectRatio/c\AspectRatio = Stretch To Fill' ${CONF_FILE}
   else
     #Default to 4:3 aspect ratio
     sed -i '/^AspectRatio/c\AspectRatio = 4:3' ${CONF_FILE}
   fi
 
   #Show FPS
-	if [ "$FPS" = "true" ]; then
+  if [ "$FPS" = "true" ]; then
     sed -i '/^ShowFPS/c\ShowFPS = true' ${CONF_FILE}
   else
     #Default to not show FPS
