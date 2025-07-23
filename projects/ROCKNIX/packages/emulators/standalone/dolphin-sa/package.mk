@@ -10,7 +10,7 @@ PKG_TOOLCHAIN="cmake"
 
 case ${DEVICE} in
   SM8250|SM8550|SDM845|AMD64|RK3399)
-    PKG_VERSION="a16387741383ca00524f78f9854c55be7089cf93" # 2506a
+    PKG_VERSION="79a3af2e6e8f905de081489e5d40ef8dd4fc1db5"
     PKG_SITE="https://github.com/dolphin-emu/dolphin"
     PKG_URL="${PKG_SITE}.git"
     PKG_DEPENDS_TARGET+=" qt6"

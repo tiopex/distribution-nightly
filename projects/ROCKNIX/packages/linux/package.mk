@@ -26,17 +26,23 @@ case ${DEVICE} in
   ;;
   SDM845)
     PKG_VERSION="5.18"
-    PKG_URL="https://gitlab.com/tjstyle/linux/-/archive/sdm845/5.18-release/linux-sdm845-5.18-release.tar.gz"
+    PKG_URL="https://gitlab.com/tjstyle/linux/-/archive/sdm845/${PKG_VERSION}-release/linux-sdm845-${PKG_VERSION}-release.tar.gz"
     PKG_PATCH_DIRS="${LINUX} ${DEVICE} default"
   ;;
-  H700|SM8*)
-    PKG_VERSION="6.15.2"
-    PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-  ;;
   *)
-    PKG_VERSION="6.12.29"
+    case ${DEVICE} in
+      H700|SM8550)
+        PKG_VERSION="6.15.2"
+      ;;
+      SM8250)
+        PKG_VERSION="6.15.7"
+      ;;
+      *)
+        PKG_VERSION="6.12.39"
+        PKG_PATCH_DIRS+=" 6.12-LTS"
+      ;;
+    esac
     PKG_URL="https://www.kernel.org/pub/linux/kernel/v${PKG_VERSION/.*/}.x/${PKG_NAME}-${PKG_VERSION}.tar.xz"
-    PKG_PATCH_DIRS+=" 6.12-LTS"
   ;;
 esac
 
