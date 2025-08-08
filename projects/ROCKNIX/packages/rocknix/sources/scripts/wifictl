@@ -11,7 +11,7 @@
 ### Basic WIFI properties used across the tool.
 ###
 ### Usage:
-###      wifictl command [ssid] [psk]
+###     wifictl command [ssid] [psk]
 ###
 
 IWD_AP_CFG_DIR="/storage/.cache/iwd/ap"
