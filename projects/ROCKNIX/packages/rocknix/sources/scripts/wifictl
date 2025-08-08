@@ -130,7 +130,7 @@ has_ap_mode() {
   wait_for_wifi
 
   PHY=$(basename "$(readlink /sys/class/net/${WIFI_DEV}/phy80211)")
-  if iwctl adapter $PHY show | grep -q 'SupportedModes.*ap'; then
+  if iwctl adapter "$PHY" show | grep -q 'SupportedModes.*ap'; then
     exit 0
   else
     exit 1
