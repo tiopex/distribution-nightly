@@ -73,7 +73,7 @@ wait_for_wifi() {
 list_wifi() {
   wait_for_wifi
 
-  iwctl station ${WIFI_DEV} get-networks | grep -E '^\s+\S' | awk '{print $1}' | tail -n +2
+  iwctl station "${WIFI_DEV}" get-networks | grep -E '^\s+\S' | awk '{print $1}' | tail -n +2
 }
 
 set_powersave() {
