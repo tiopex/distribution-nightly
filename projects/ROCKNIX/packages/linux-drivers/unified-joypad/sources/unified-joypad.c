@@ -4,6 +4,9 @@
  * This module creates a single virtual input device that combines events from
  * multiple physical input devices. It is configured via a Device Tree node,
  * including optional button remapping by device name or unique physical path.
+ *
+ * It will also grab the source devices to prevent them from reporting events
+ * independently to the system.
  */
 
 #include <linux/kernel.h>
@@ -232,10 +235,16 @@ static int joypad_connect(struct input_handler *handler, struct input_dev *dev,
 		return error;
 	}
 
+	input_grab_device(handle);
+
 	dew = kzalloc(sizeof(*dew), GFP_KERNEL);
 	if (!dew) {
 		pr_err(DRV_NAME ": Failed to allocate event work for connect\n");
-		return 0;
+		input_release_device(handle);
+		input_close_device(handle);
+		input_unregister_handle(handle);
+		kfree(handle);
+		return -ENOMEM;
 	}
 
 	INIT_WORK(&dew->work, process_device_event_work);
@@ -262,6 +271,7 @@ static void joypad_disconnect(struct input_handle *handle)
 		pr_err(DRV_NAME ": Failed to allocate event work for disconnect\n");
 	}
 
+	input_release_device(handle);
 	input_close_device(handle);
 	input_unregister_handle(handle);
 	kfree(handle);
