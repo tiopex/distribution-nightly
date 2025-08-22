@@ -18,6 +18,7 @@
 #include <linux/mutex.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
+#include <linux/jiffies.h>
 
 #define DRV_NAME "unified_joypad"
 
@@ -33,12 +34,6 @@ struct device_remap_config {
 	const char *phys;
 	int num_remaps;
 	struct key_remap *remaps;
-};
-
-struct device_event_work {
-	struct work_struct work;
-	struct input_dev *dev;
-	bool connect;
 };
 
 /* --- Module Information --- */
@@ -64,25 +59,18 @@ static u16 vdev_version;
 static struct device_remap_config *remap_configs;
 static int num_remap_configs;
 
-static struct workqueue_struct *event_wq;
+static struct delayed_work rebuild_work;
 static struct mutex dev_mutex;
 
 /* --- Forward Declarations --- */
 
-static void process_device_event_work(struct work_struct *work);
+static void rebuild_virtual_device_work(struct work_struct *work);
 
 /* --- Functions --- */
 
 static void copy_attributes(struct input_dev *dev, struct input_dev *vdev)
 {
 	int i;
-
-	if (vdev->id.vendor == 0) {
-		vdev->id.bustype = dev->id.bustype;
-		vdev->id.vendor  = dev->id.vendor;
-		vdev->id.product = dev->id.product;
-		vdev->id.version = dev->id.version;
-	}
 
 	for (i = 0; i < BITS_TO_LONGS(EV_MAX); i++)
 		vdev->evbit[i] |= dev->evbit[i];
@@ -134,6 +122,7 @@ static void rebuild_virtual_device(void)
 	}
 
 	vdev->name = vdev_name;
+	vdev->id.bustype = BUS_VIRTUAL;
 	vdev->id.vendor = vdev_vendor;
 	vdev->id.product = vdev_product;
 	vdev->id.version = vdev_version;
@@ -181,11 +170,10 @@ static void joypad_event(struct input_handle *handle, unsigned int type,
 static int joypad_connect(struct input_handler *handler, struct input_dev *dev,
 			  const struct input_device_id *id)
 {
-	struct device_event_work *dew;
 	struct input_handle *handle;
 	struct device_remap_config *name_match = NULL;
 	struct device_remap_config *phys_match = NULL;
-	int error, i;
+	int error, i, slot = -1;
 	bool is_target = false;
 
 	for (i = 0; i < num_target_devices; i++) {
@@ -237,39 +225,48 @@ static int joypad_connect(struct input_handler *handler, struct input_dev *dev,
 
 	input_grab_device(handle);
 
-	dew = kzalloc(sizeof(*dew), GFP_KERNEL);
-	if (!dew) {
-		pr_err(DRV_NAME ": Failed to allocate event work for connect\n");
+	mutex_lock(&dev_mutex);
+	for (i = 0; i < num_target_devices; i++) {
+		if (strcmp(dev->name, target_device_names[i]) == 0 && !source_devs[i]) {
+			source_devs[i] = dev;
+			slot = i;
+			break;
+		}
+	}
+	mutex_unlock(&dev_mutex);
+
+	if (slot != -1) {
+		pr_info(DRV_NAME ": Successfully connected to and grabbed '%s'\n", dev->name);
+		/* Schedule a rebuild in 200ms. If another device connects, this will reset the timer. */
+		schedule_delayed_work(&rebuild_work, msecs_to_jiffies(200));
+	} else {
+		pr_warn(DRV_NAME ": No free slot for '%s'\n", dev->name);
 		input_release_device(handle);
 		input_close_device(handle);
 		input_unregister_handle(handle);
 		kfree(handle);
-		return -ENOMEM;
+		return -EBUSY;
 	}
-
-	INIT_WORK(&dew->work, process_device_event_work);
-	dew->dev = dev;
-	dew->connect = true;
-	queue_work(event_wq, &dew->work);
 
 	return 0;
 }
 
 static void joypad_disconnect(struct input_handle *handle)
 {
-	struct device_event_work *dew;
-
+	int i;
 	pr_info(DRV_NAME ": Disconnecting from '%s'\n", handle->dev->name);
 
-	dew = kzalloc(sizeof(*dew), GFP_KERNEL);
-	if (dew) {
-		INIT_WORK(&dew->work, process_device_event_work);
-		dew->dev = handle->dev;
-		dew->connect = false;
-		queue_work(event_wq, &dew->work);
-	} else {
-		pr_err(DRV_NAME ": Failed to allocate event work for disconnect\n");
+	mutex_lock(&dev_mutex);
+	for (i = 0; i < num_target_devices; i++) {
+		if (source_devs[i] == handle->dev) {
+			source_devs[i] = NULL;
+			break;
+		}
 	}
+	mutex_unlock(&dev_mutex);
+
+	/* Also schedule a rebuild on disconnect */
+	schedule_delayed_work(&rebuild_work, msecs_to_jiffies(200));
 
 	input_release_device(handle);
 	input_close_device(handle);
@@ -290,41 +287,11 @@ static struct input_handler joypad_handler = {
 	.id_table   = joypad_ids,
 };
 
-static void process_device_event_work(struct work_struct *work)
+static void rebuild_virtual_device_work(struct work_struct *work)
 {
-	struct device_event_work *dew = container_of(work, struct device_event_work, work);
-	int i;
-
 	mutex_lock(&dev_mutex);
-
-	if (dew->connect) {
-		int slot = -1;
-		for (i = 0; i < num_target_devices; i++) {
-			if (strcmp(dew->dev->name, target_device_names[i]) == 0 && !source_devs[i]) {
-				source_devs[i] = dew->dev;
-				slot = i;
-				break;
-			}
-		}
-
-		if (slot != -1)
-			pr_info(DRV_NAME ": Successfully connected to and grabbed '%s'\n", dew->dev->name);
-		else
-			pr_warn(DRV_NAME ": No free slot for '%s'\n", dew->dev->name);
-
-	} else {
-		for (i = 0; i < num_target_devices; i++) {
-			if (source_devs[i] == dew->dev) {
-				source_devs[i] = NULL;
-				break;
-			}
-		}
-	}
-
 	rebuild_virtual_device();
-
 	mutex_unlock(&dev_mutex);
-	kfree(dew);
 }
 
 static int parse_remaps(struct platform_device *pdev)
@@ -420,9 +387,7 @@ static int unified_joypad_probe(struct platform_device *pdev)
 		return ret;
 
 	mutex_init(&dev_mutex);
-	event_wq = create_singlethread_workqueue(DRV_NAME "_wq");
-	if (!event_wq)
-		return -ENOMEM;
+	INIT_DELAYED_WORK(&rebuild_work, rebuild_virtual_device_work);
 
 	return input_register_handler(&joypad_handler);
 }
@@ -431,10 +396,8 @@ static void unified_joypad_remove(struct platform_device *pdev)
 {
 	input_unregister_handler(&joypad_handler);
 
-	if (event_wq) {
-		flush_workqueue(event_wq);
-		destroy_workqueue(event_wq);
-	}
+	/* Cancel any pending work before cleaning up */
+	cancel_delayed_work_sync(&rebuild_work);
 
 	mutex_lock(&dev_mutex);
 	if (vdev)
