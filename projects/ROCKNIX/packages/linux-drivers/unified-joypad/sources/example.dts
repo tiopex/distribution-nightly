@@ -27,9 +27,34 @@
 		 * expect a standard controller.
 		 */
 		virtual-device-name = "ROCKNIX Unified Joypad";
-		virtual-vendor-id = <0xdead>;      // USB Vendor ID in hexadecimal
-		virtual-product-id = <0xbeef>;     // USB Product ID in hexadecimal
-		virtual-version-id = <0x0100>;     // Device version in hexadecimal
+		virtual-vendor-id = <0x0fff>;      // USB Vendor ID in hexadecimal
+		virtual-product-id = <0x0fff>;     // USB Product ID in hexadecimal
+		virtual-version-id = <0x9001>;     // Device version in hexadecimal
+
+		/*
+		 * --- Optional: Event Ignore List ---
+		 *
+		 * Use this property to specify input events that should be completely
+		 * blocked from the source devices. This is useful for preventing
+		 * "double inputs" where a single button press generates both a
+		 * button event (EV_KEY) and an axis event (EV_ABS).
+		 *
+		 * The list consists of pairs of u32 values: <TYPE CODE>.
+		 * - The first value is the event type (e.g., EV_ABS).
+		 * - The second value is the event code (e.g., ABS_BRAKE).
+		 *
+		 * The total number of elements must be even. You can find the numerical
+		 * values for types and codes in the kernel's 'linux/input-event-codes.h'
+		 * or use the macros defined in 'dt-bindings/input/input.h'.
+		 *
+		 * Example: Block the analog axis events from the L2/R2 triggers that
+		 * also send digital button events.
+		 */
+		ignore-events = <
+			/* Type      Code */
+			EV_ABS    ABS_BRAKE,  // Block the L2 trigger's analog axis (ABS_BRAKE)
+			EV_ABS    ABS_GAS     // Block the R2 trigger's analog axis (ABS_GAS)
+		>;
 
 		/*
 		 * --- Optional: Button Remapping Rules ---

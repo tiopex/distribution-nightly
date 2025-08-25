@@ -29,6 +29,11 @@ struct key_remap {
 	u32 to;
 };
 
+struct event_filter {
+	u32 type;
+	u32 code;
+};
+
 struct device_remap_config {
 	const char *name;
 	const char *phys;
@@ -58,6 +63,9 @@ static u16 vdev_version;
 
 static struct device_remap_config *remap_configs;
 static int num_remap_configs;
+
+static struct event_filter *ignored_events;
+static int num_ignored_events;
 
 static struct delayed_work rebuild_work;
 static struct mutex dev_mutex;
@@ -153,6 +161,11 @@ static void joypad_event(struct input_handle *handle, unsigned int type,
 {
 	struct device_remap_config *remap_cfg = handle->private;
 	int i;
+
+	for (i = 0; i < num_ignored_events; i++) {
+		if (type == ignored_events[i].type && code == ignored_events[i].code)
+			return; /* This is an ignored event, do nothing. */
+	}
 
 	if (vdev) {
 		if (type == EV_KEY && remap_cfg) {
@@ -294,6 +307,37 @@ static void rebuild_virtual_device_work(struct work_struct *work)
 	mutex_unlock(&dev_mutex);
 }
 
+static int parse_ignore_list(struct platform_device *pdev)
+{
+	struct device_node *np = pdev->dev.of_node;
+	int n_vals;
+
+	n_vals = of_property_count_u32_elems(np, "ignore-events");
+	if (n_vals <= 0)
+		return 0; /* No property found, which is fine */
+
+	if (n_vals % 2 != 0) {
+		dev_warn(&pdev->dev, "Property 'ignore-events' must have an even number of elements (type/code pairs).\n");
+		return -EINVAL;
+	}
+
+	num_ignored_events = n_vals / 2;
+	ignored_events = devm_kcalloc(&pdev->dev, num_ignored_events, sizeof(*ignored_events), GFP_KERNEL);
+	if (!ignored_events) {
+		num_ignored_events = 0;
+		return -ENOMEM;
+	}
+
+	if (of_property_read_u32_array(np, "ignore-events", (u32 *)ignored_events, n_vals)) {
+		dev_err(&pdev->dev, "Failed to read 'ignore-events' property.\n");
+		num_ignored_events = 0;
+		return -EINVAL;
+	}
+
+	pr_info(DRV_NAME ": Will ignore %d event types.\n", num_ignored_events);
+	return 0;
+}
+
 static int parse_remaps(struct platform_device *pdev)
 {
 	struct device_node *remaps_np, *child;
@@ -381,6 +425,10 @@ static int unified_joypad_probe(struct platform_device *pdev)
 		vdev_product = (u16)temp_val;
 	if (of_property_read_u32(np, "virtual-version-id", &temp_val) == 0)
 		vdev_version = (u16)temp_val;
+
+	ret = parse_ignore_list(pdev);
+	if (ret)
+		return ret;
 
 	ret = parse_remaps(pdev);
 	if (ret)
