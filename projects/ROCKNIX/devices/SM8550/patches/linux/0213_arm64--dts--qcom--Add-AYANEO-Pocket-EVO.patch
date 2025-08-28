@@ -3,7 +3,7 @@ new file mode 100644
 index 000000000..2dd554820
 --- /dev/null
 +++ b/arch/arm64/boot/dts/qcom/qcs8550-ayaneo-pocketevo.dts
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,32 @@
 +// SPDX-License-Identifier: BSD-3-Clause
 +/*
 + * Copyright (c) 2025, Teguh Sobirin.
@@ -21,20 +21,9 @@ index 000000000..2dd554820
 +	compatible = "ayaneo,pocketevo", "qcom,qcs8550", "qcom,sm8550";
 +};
 +
-+&tlmm {
-+	panel_pwr_active: panel-pwr-active-state {
-+		pins = "gpio152", "gpio153";
-+		function = "gpio";
-+		drive-strength = <8>;
-+		bias-disable;
-+		output-high;
-+	};
-+};
-+
 +&i2c0 {
 +   clock-frequency = <400000>;
 +	status = "okay";
-+
 +};
 +
 +&display_panel {
