@@ -16,7 +16,7 @@ diff -rupbN linux.orig/arch/arm64/boot/dts/qcom/qcs8550-ayaneo-pocketds.dts linu
 +	model = "AYANEO Pocket DS";
 +	qcom,board-id = <0x1000b 0x01>;
 +	qcom,msm-id = <0x258 0x20000>, <0x259 0x20000>;
-+	compatible = "ayaneo,ds", "qcom,qcs8550", "qcom,sm8550";
++	compatible = "ayaneo,pocketds", "qcom,qcs8550", "qcom,sm8550";
 +};
 +
 +&i2c0 {
