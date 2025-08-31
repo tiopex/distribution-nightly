@@ -1,25 +1,7 @@
-diff --git a/src/daemon/pipewire-pulse.conf.in b/src/daemon/pipewire-pulse.conf.in
-index 0d54cf9b9..625f21c2b 100644
---- a/src/daemon/pipewire-pulse.conf.in
-+++ b/src/daemon/pipewire-pulse.conf.in
-@@ -16,6 +16,8 @@ context.properties = {
-     #log.level       = 2
- 
-     #default.clock.quantum-limit = 8192
-+    default.clock.min-quantum = 1024
-+    default.clock.max-quantum = 2048
- }
- 
- context.spa-libs = {
-@@ -67,6 +69,7 @@ pulse.cmd = [
-     { cmd = "load-module" args = "module-stream-restore" flags = [ ] }
-     #{ cmd = "load-module" args = "module-switch-on-connect" }
-     #{ cmd = "load-module" args = "module-gsettings" flags = [ nofail ] }
-+    { cmd = "load-module" args = "module-null-sink sink_name=auto_null format=s16le rate=48000 channels=2" }
- ]
- 
- stream.properties = {
-@@ -94,11 +97,11 @@ pulse.properties = {
+diff -rupN pipewire-1.0.0.orig/src/daemon/pipewire-pulse.conf.in pipewire-1.0.0/src/daemon/pipewire-pulse.conf.in
+--- pipewire-1.0.0.orig/src/daemon/pipewire-pulse.conf.in	2023-12-29 13:41:35.329947857 +0000
++++ pipewire-1.0.0/src/daemon/pipewire-pulse.conf.in	2023-12-29 13:41:46.850669838 +0000
+@@ -92,11 +92,11 @@ pulse.properties = {
          #"tcp:[::]:9999"                    # IPv6 on all addresses
          #"tcp:127.0.0.1:8888"               # IPv4 on a single address
          #
@@ -35,19 +17,10 @@ index 0d54cf9b9..625f21c2b 100644
 +        }
      ]
      #server.dbus-name       = "org.pulseaudio.Server"
-     #pulse.allow-module-loading = true
-@@ -111,6 +114,7 @@ pulse.properties = {
-     #pulse.idle.timeout     = 0             # don't pause after underruns
-     #pulse.default.format   = F32
-     #pulse.default.position = [ FL FR ]
-+    pulse.min.idle.time = 5
- }
- 
- pulse.properties.rules = [
-diff --git a/src/daemon/systemd/system/pipewire.service.in b/src/daemon/systemd/system/pipewire.service.in
-index dc8db3f8f..679a2b09b 100644
---- a/src/daemon/systemd/system/pipewire.service.in
-+++ b/src/daemon/systemd/system/pipewire.service.in
+     #pulse.min.req          = 128/48000     # 2.7ms
+diff -rupN pipewire-1.0.0.orig/src/daemon/systemd/system/pipewire.service.in pipewire-1.0.0/src/daemon/systemd/system/pipewire.service.in
+--- pipewire-1.0.0.orig/src/daemon/systemd/system/pipewire.service.in	2023-12-29 13:41:35.329947857 +0000
++++ pipewire-1.0.0/src/daemon/systemd/system/pipewire.service.in	2023-12-29 13:43:32.217227049 +0000
 @@ -21,15 +21,25 @@ NoNewPrivileges=yes
  RestrictNamespaces=yes
  SystemCallArchitectures=native
@@ -77,11 +50,10 @@ index dc8db3f8f..679a2b09b 100644
 -Also=pipewire.socket pipewire-manager.socket
 +Also=pipewire.socket pipewire-pulse.socket pipewire-manager.socket
  WantedBy=default.target
-diff --git a/src/daemon/systemd/system/pipewire.socket b/src/daemon/systemd/system/pipewire.socket
-index 2e3cb719f..e7187eb88 100644
---- a/src/daemon/systemd/system/pipewire.socket
-+++ b/src/daemon/systemd/system/pipewire.socket
-@@ -4,8 +4,8 @@ Description=PipeWire Multimedia System Socket
+diff -rupN pipewire-1.0.0.orig/src/daemon/systemd/system/pipewire.socket pipewire-1.0.0/src/daemon/systemd/system/pipewire.socket
+--- pipewire-1.0.0.orig/src/daemon/systemd/system/pipewire.socket	2023-12-29 13:41:35.329947857 +0000
++++ pipewire-1.0.0/src/daemon/systemd/system/pipewire.socket	2023-12-29 13:44:04.291208172 +0000
+@@ -4,8 +4,8 @@ Description=PipeWire Multimedia System S
  [Socket]
  Priority=6
  ListenStream=%t/pipewire/pipewire-0
