@@ -365,20 +365,20 @@ set +e
         fi
       ;;
       (${FUNCTION_HOTKEY_TOUCH_EVENT})
-        if [ "${FN_A_PRESSED}" = true ] && [ "${TOUCHSCREEN_EVENTS}" = true ]; then
+        if [ "${HOTKEY_A_PRESSED}" = true ] && [ "${FN_A_PRESSED}" = true ] && [ "${TOUCHSCREEN_EVENTS}" = true ]; then
           ${DEBUG} && log $0 "${FUNCTION_HOTKEY_TOUCH_EVENT}: Toggle Touchscreen Keyboard"
           kill -34 $(pidof wvkbd-mobintl)
         fi
       ;;
       (${FUNCTION_HOTKEY_BTN_EAST_EVENT})
-        if [ "${FN_A_PRESSED}" = true ]; then
+        if [ "${HOTKEY_A_PRESSED}" = true ] && [ "${FN_A_PRESSED}" = true ]; then
           ${DEBUG} && log $0 "${FUNCTION_HOTKEY_BTN_EAST_EVENT}: Screenshot Taken"
           /usr/bin/rocknix-screenshot
         fi
       ;;
      (${FUNCTION_HOTKEY_BTN_WEST_EVENT})
-        if [ "${FN_A_PRESSED}" = true ]; then
-          ${DEBUG} && log $0 "${FUNCTION_HOTKEY_BTN_WEST_EVENT}: Config Mangohug"
+        if [ "${HOTKEY_A_PRESSED}" = true ] && [ "${FN_A_PRESSED}" = true ]; then
+          ${DEBUG} && log $0 "${FUNCTION_HOTKEY_BTN_WEST_EVENT}: Config Mangohud"
           /usr/bin/mangohud_set toggle
         fi
       ;;
