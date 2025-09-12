@@ -83,7 +83,7 @@ jobs:
         run: gh workflow run retry-workflow.yml -F run_id=${{ github.run_id }}
 
   release-nightly:
-     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.repository_owner == 'ROCKNIX' && needs.set-envs.outputs.NIGHTLY == 'yes' }}
+     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.repository_owner == 'tiopex' && needs.set-envs.outputs.NIGHTLY == 'yes' }}
      name: Release nightly
      needs: build-devices
      runs-on: ubuntu-24.04
@@ -141,6 +141,18 @@ jobs:
          body: ${{ steps.create-nightly-tag.outputs.commit_msg }}
          token: ${{ secrets.GH_PAT }}
          repo: distribution-nightly
+     - name: Set up SSH sourceforge
+       run: |
+         mkdir -p ~/.ssh
+         echo "${{ secrets.SF_SSH_KEY }}" > ~/.ssh/id_ed25519
+         chmod 600 ~/.ssh/id_ed25519
+         ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
+     - name: Upload files sourceforge
+       run: |
+         FILES=$(find . -type f \( -name "*.tar" -o -name "*.gz" -o -name "*.sha256" \))
+         for FILE in $FILES; do
+           rsync -e ssh "$FILE" tiopex@frs.sourceforge.net:/home/frs/project/rocknix/nightly/${{ env.DATE }}/
+         done         
          
   release-official:
     if: ${{ always() && !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.repository_owner == 'ROCKNIX' && needs.set-envs.outputs.OFFICIAL == 'yes' }}
@@ -301,3 +313,15 @@ jobs:
             * Fixed...?
             
             **Full Changelog**: https://github.com/ROCKNIX/distribution/compare/${{ steps.get-last-tag.outputs.TAG }}...${{ env.DATE }}
+      - name: Set up SSH sourceforge
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SF_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
+      - name: Upload files sourceforge
+        run: |
+          FILES=$(find . -type f \( -name "*.tar" -o -name "*.gz" -o -name "*.sha256" \))
+          for FILE in $FILES; do
+            rsync -e ssh "$FILE" tiopex@frs.sourceforge.net:/home/frs/project/rocknix/official/${{ env.DATE }}/
+          done               
