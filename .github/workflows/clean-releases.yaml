@@ -29,7 +29,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y lftp    
       - name: Delete releases at sourceforge
         run: |
-          lftp sftp://${{ secrets.SF_USER }}@frs.sourceforge.net <<'EOF'
+          lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF'
           cd /home/frs/project/rocknix/nightly
           cls -1 --sort=date > /tmp/dirs.txt
           bye
@@ -37,7 +37,7 @@ jobs:
           
           head -n -5 /tmp/dirs.txt | while read d; do
             echo "rm dir $d"
-            lftp sftp://${{ secrets.SF_USER }}@frs.sourceforge.net <<'EOF2'
+            lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF2'
             cd /home/frs/project/rocknix/nightly
             #rm -r "$d"
             bye
