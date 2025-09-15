@@ -7,7 +7,7 @@ on:
 
 jobs:
   clean-releases:
-    if: github.repository == 'ROCKNIX/distribution-nightly'
+    if: github.repository == 'tiopex/distribution-nightly'
     runs-on: ubuntu-latest
     steps:
       - name: Delete releases and workflows runs
