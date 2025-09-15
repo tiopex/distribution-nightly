@@ -25,6 +25,8 @@ jobs:
           echo "${{ secrets.SF_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan frs.sourceforge.net >> ~/.ssh/known_hosts
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp    
       - name: Delete releases at sourceforge
         run: |
           lftp sftp://${{ secrets.SF_USER }}@frs.sourceforge.net <<'EOF'
