@@ -41,5 +41,5 @@ jobs:
             cd /home/frs/project/rocknix/nightly
             #rm -r "$d"
             bye
-            EOF2
+          EOF2
           done
