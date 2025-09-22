@@ -35,7 +35,7 @@ jobs:
           bye
           EOF
           
-          head -n +6 /tmp/dirs.txt | while read d; do
+          tail -n +6 /tmp/dirs.txt | while read d; do
             echo "rm dir $d"
             lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF2'
             cd /home/frs/project/rocknix/nightly
