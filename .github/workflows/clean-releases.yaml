@@ -37,9 +37,5 @@ jobs:
           
           tail -n +6 /tmp/dirs.txt | while read d; do
             echo "rm dir $d"
-            lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF2'
-            cd /home/frs/project/rocknix/nightly
-            rm -r "$d"
-            bye
-          EOF2
+            lftp -u "${{ secrets.SF_USER }}" sftp://frs.sourceforge.net -e "cd /home/frs/project/rocknix/nightly; rm -r $d; bye"
           done
