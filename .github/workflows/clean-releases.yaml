@@ -39,7 +39,7 @@ jobs:
             echo "rm dir $d"
             lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF2'
             cd /home/frs/project/rocknix/nightly
-            #rm -r "$d"
+            rm -r "$d"
             bye
           EOF2
           done
