@@ -30,12 +30,12 @@ jobs:
       - name: Delete releases at sourceforge
         run: |
           lftp -u ${{ secrets.SF_USER }}, sftp://frs.sourceforge.net <<'EOF'
-          cd /home/frs/project/rocknix/nightly
+          cd /home/frs/project/tiopex/nightly
           cls -1 --sort=date > /tmp/dirs.txt
           bye
           EOF
           
           tail -n +6 /tmp/dirs.txt | while read d; do
             echo "rm dir $d"
-            lftp -u "${{ secrets.SF_USER }}", sftp://frs.sourceforge.net -e "cd /home/frs/project/rocknix/nightly; rm -r $d; bye"
+            lftp -u "${{ secrets.SF_USER }}", sftp://frs.sourceforge.net -e "cd /home/frs/project/tiopex/nightly; rm -r $d; bye"
           done
